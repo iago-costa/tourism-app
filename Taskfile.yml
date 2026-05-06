@@ -1,0 +1,270 @@
+# https://taskfile.dev
+version: "3"
+
+dotenv: ["backend/.env"]
+
+vars:
+  BACKEND_DIR: ./backend
+  FRONTEND_DIR: ./frontend-react-native
+  VENV: .venv
+  PYTHON: "{{.VENV}}/bin/python"
+  PIP: "{{.VENV}}/bin/pip"
+  UVICORN: "{{.VENV}}/bin/uvicorn"
+  ALEMBIC: "{{.VENV}}/bin/alembic"
+
+tasks:
+  # ─── Setup ──────────────────────────────────────────────────────────────────
+
+  setup:
+    desc: Full first-time setup (services + venv + deps + metro)
+    cmds:
+      - task: services
+      - task: setup:back
+      - task: setup:front
+      - echo ""
+      - echo "✅ Everything ready! Run 'task dev' to start development"
+
+  setup:back:
+    desc: Create Python venv and install backend deps
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - python3 -m venv .venv
+      - "{{.PIP}} install --upgrade pip"
+      - "{{.PIP}} install -r requirements.txt"
+    status:
+      - test -f "{{.VENV}}/bin/uvicorn"
+
+  setup:front:
+    desc: Install React Native npm dependencies
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm install
+    status:
+      - test -d node_modules
+
+  install:
+    desc: Install all dependencies (backend + frontend)
+    cmds:
+      - task: install:back
+      - task: install:front
+      - echo "✅ All dependencies installed"
+
+  install:back:
+    desc: Install backend Python dependencies
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - |
+        export LD_LIBRARY_PATH="$(nix build nixpkgs#stdenv.cc.cc.lib --no-link --print-out-paths 2>/dev/null)/lib:${LD_LIBRARY_PATH:-}"
+        {{.PIP}} install --upgrade pip
+        {{.PIP}} install -r requirements.txt
+
+  install:front:
+    desc: Install frontend npm dependencies
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm install
+
+  # ─── Services (Docker) ─────────────────────────────────────────────────────
+
+  services:
+    desc: Start infrastructure services (PostgreSQL + Redis)
+    cmds:
+      - docker compose up -d
+      - echo "⏳ Waiting for Postgres..."
+      - docker compose exec db sh -c 'until pg_isready -U tourism -d tourism_dev; do sleep 1; done'
+      - echo "✅ PostgreSQL ready"
+      - echo "⏳ Waiting for Redis..."
+      - docker compose exec redis sh -c 'until redis-cli ping | grep -q PONG; do sleep 1; done'
+      - echo "✅ Redis ready"
+
+  services:stop:
+    desc: Stop infrastructure services
+    cmds:
+      - docker compose down
+
+  services:reset:
+    desc: Stop services and destroy volumes (clean DB)
+    cmds:
+      - docker compose down -v
+      - echo "🗑️  Volumes removed"
+
+  # ─── Development ───────────────────────────────────────────────────────────
+
+  dev:
+    desc: Start all services + backend + Android emulator
+    deps: [services]
+    cmds:
+      - |
+        kill $(lsof -t -i:8000) 2>/dev/null || true
+
+        # NixOS: resolve libstdc++ for Python C-extensions
+        NIX_LIB="$(nix build nixpkgs#stdenv.cc.cc.lib --no-link --print-out-paths 2>/dev/null)/lib"
+        export LD_LIBRARY_PATH="${NIX_LIB}:${LD_LIBRARY_PATH:-}"
+        echo "  📦 NIX_LIB=${NIX_LIB}"
+        ls "${NIX_LIB}/libstdc++.so.6" 2>/dev/null && echo "  ✅ libstdc++ found" || echo "  ⚠️  libstdc++ NOT found"
+
+        # Start backend
+        cd {{.BACKEND_DIR}} && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &
+        PID_BACK=$!
+
+        # Start Metro bundler
+        cd {{.FRONTEND_DIR}} && npx react-native start &
+        PID_METRO=$!
+
+        trap "kill $PID_BACK $PID_METRO 2>/dev/null" EXIT
+
+        echo ""
+        echo "  🚀 Backend   → http://localhost:8000"
+        echo "  📖 API Docs  → http://localhost:8000/docs"
+        echo "  📱 Metro     → http://localhost:8081"
+        echo ""
+        echo "  💡 Run 'task app:android' or 'task app:ios' in another terminal"
+        echo ""
+        wait
+    interactive: true
+
+  dev:back:
+    desc: Start FastAPI with auto-reload (standalone)
+    dir: "{{.BACKEND_DIR}}"
+    env:
+      LD_LIBRARY_PATH:
+        sh: echo "$(nix build nixpkgs#stdenv.cc.cc.lib --no-link --print-out-paths 2>/dev/null)/lib:${LD_LIBRARY_PATH:-}"
+    cmds:
+      - "{{.UVICORN}} app.main:app --host 0.0.0.0 --port 8000 --reload"
+    interactive: true
+
+  dev:metro:
+    desc: Start Metro bundler (standalone)
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npx react-native start
+    interactive: true
+
+  # ─── App (Emulator / Device) ───────────────────────────────────────────────
+
+  app:android:
+    desc: Build and launch on Android emulator/device
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npx react-native run-android
+    interactive: true
+
+  app:ios:
+    desc: Build and launch on iOS simulator (macOS only)
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npx react-native run-ios
+    interactive: true
+
+  # ─── Database ──────────────────────────────────────────────────────────────
+
+  db:migrate:
+    desc: Generate Alembic migration (pass NAME via -- args)
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - '{{.ALEMBIC}} revision --autogenerate -m "{{.CLI_ARGS}}"'
+    requires:
+      vars: [CLI_ARGS]
+
+  db:upgrade:
+    desc: Run Alembic migrations to head
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - "{{.ALEMBIC}} upgrade head"
+
+  db:seed:
+    desc: Seed database with sample data
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - |
+        export LD_LIBRARY_PATH="$(nix build nixpkgs#stdenv.cc.cc.lib --no-link --print-out-paths 2>/dev/null)/lib:${LD_LIBRARY_PATH:-}"
+        {{.PYTHON}} -m scripts.seed
+
+  db:shell:
+    desc: Connect to PostgreSQL via psql
+    cmds:
+      - docker compose exec db psql -U tourism -d tourism_dev
+    interactive: true
+
+  # ─── Testing ───────────────────────────────────────────────────────────────
+
+  test:
+    desc: Run all tests
+    cmds:
+      - task: test:back
+      - task: test:front
+
+  test:back:
+    desc: Run backend tests
+    dir: "{{.BACKEND_DIR}}"
+    env:
+      LD_LIBRARY_PATH:
+        sh: echo "$(nix build nixpkgs#stdenv.cc.cc.lib --no-link --print-out-paths 2>/dev/null)/lib:${LD_LIBRARY_PATH:-}"
+    cmds:
+      - "{{.PYTHON}} -m pytest -v"
+
+  test:front:
+    desc: Run frontend tests
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm test
+
+  test:health:
+    desc: Quick backend health check
+    cmds:
+      - curl -sf http://localhost:8000/health | python3 -m json.tool
+
+  # ─── Lint ──────────────────────────────────────────────────────────────────
+
+  lint:
+    desc: Lint backend + frontend
+    cmds:
+      - task: lint:back
+      - task: lint:front
+
+  lint:back:
+    desc: Lint backend with ruff
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - "{{.VENV}}/bin/ruff check ."
+
+  lint:front:
+    desc: Lint frontend with ESLint
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm run lint
+
+  # ─── Utilities ─────────────────────────────────────────────────────────────
+
+  logs:
+    desc: Follow Docker Compose service logs
+    cmds:
+      - docker compose logs -f
+    interactive: true
+
+  logs:back:
+    desc: Follow only backend-related logs
+    cmds:
+      - docker compose logs -f db redis
+    interactive: true
+
+  clean:
+    desc: Remove venv, node_modules, and Docker volumes
+    cmds:
+      - rm -rf "{{.BACKEND_DIR}}/{{.VENV}}"
+      - rm -rf "{{.FRONTEND_DIR}}/node_modules"
+      - docker compose down -v
+      - echo "🧹 Clean"
+
+  status:
+    desc: Show status of all services
+    cmds:
+      - |
+        echo "━━━ Docker Services ━━━"
+        docker compose ps
+        echo ""
+        echo "━━━ Backend ━━━"
+        curl -sf http://localhost:8000/health 2>/dev/null && echo " ✅ UP" || echo " ❌ DOWN"
+        echo ""
+        echo "━━━ Metro Bundler ━━━"
+        curl -sf http://localhost:8081/status 2>/dev/null && echo " ✅ UP" || echo " ❌ DOWN"

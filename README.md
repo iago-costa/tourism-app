@@ -31,28 +31,51 @@ tourism-app/
 
 ## 🚀 Getting Started
 
-### Backend
+### Prerequisites
+
+- [Task](https://taskfile.dev) (`task` CLI)
+- [Docker](https://docs.docker.com/get-docker/) (for PostgreSQL + Redis)
+- Python 3.12+
+- Node.js 18+
+
+### First-Time Setup
 
 ```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+task setup    # Creates venv, installs deps, starts Docker services
 ```
 
-### Frontend (React Native)
+### Development
 
 ```bash
-cd frontend-react-native
-npm install
-
-# iOS
-npx react-native run-ios
-
-# Android
-npx react-native run-android
+task dev      # Starts Docker services + Backend (port 8000) + Metro bundler (port 8081)
 ```
+
+Then in a **separate terminal**, launch the app on an emulator:
+
+```bash
+task app:android    # Build & run on Android emulator/device
+task app:ios        # Build & run on iOS simulator (macOS only)
+```
+
+### All Available Commands
+
+```bash
+task --list   # Show all available tasks
+```
+
+| Command | Description |
+|---|---|
+| `task dev` | Start services + backend + Metro bundler |
+| `task app:android` | Launch on Android emulator |
+| `task app:ios` | Launch on iOS simulator |
+| `task services` | Start Docker infra (Postgres + Redis) |
+| `task services:stop` | Stop Docker infra |
+| `task setup` | Full first-time setup |
+| `task test` | Run all tests |
+| `task lint` | Lint backend + frontend |
+| `task db:shell` | Connect to Postgres via psql |
+| `task status` | Show status of all services |
+| `task clean` | Remove venv, node_modules, volumes |
 
 ## 📱 Key Features
 

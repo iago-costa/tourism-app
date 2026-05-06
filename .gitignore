@@ -1,70 +1,53 @@
-# OSX
-#
+# ==========================================
+# Monorepo .gitignore — Tourism App
+# ==========================================
+
+# ----- OS -----
 .DS_Store
+Thumbs.db
+
+# ----- IDE -----
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ----- Frontend (React Native) -----
+frontend-react-native/node_modules/
+frontend-react-native/npm-debug.log
+frontend-react-native/yarn-error.log
+frontend-react-native/.metro-health-check*
+frontend-react-native/coverage/
 
 # Xcode
-#
-build/
-*.pbxuser
-!default.pbxuser
-*.mode1v3
-!default.mode1v3
-*.mode2v3
-!default.mode2v3
-*.perspectivev3
-!default.perspectivev3
-xcuserdata
-*.xccheckout
-*.moved-aside
-DerivedData
-*.hmap
-*.ipa
-*.xcuserstate
-**/.xcode.env.local
+frontend-react-native/ios/build/
+frontend-react-native/ios/Pods/
+frontend-react-native/ios/DerivedData/
+frontend-react-native/ios/**/*.xcuserstate
+frontend-react-native/ios/**/xcuserdata/
+frontend-react-native/ios/**/.xcode.env.local
 
-# Android/IntelliJ
-#
-build/
-.idea
-.gradle
-local.properties
-*.iml
-*.hprof
-.cxx/
-*.keystore
-!debug.keystore
-.kotlin/
+# Android
+frontend-react-native/android/build/
+frontend-react-native/android/app/build/
+frontend-react-native/android/.gradle/
+frontend-react-native/android/local.properties
+frontend-react-native/android/*.hprof
+frontend-react-native/android/.cxx/
+frontend-react-native/android/.kotlin/
 
-# node.js
-#
-node_modules/
-npm-debug.log
-yarn-error.log
-
-# fastlane
-#
-# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
-# screenshots whenever they are needed.
-# For more information about the recommended setup visit:
-# https://docs.fastlane.tools/best-practices/source-control/
-
-**/fastlane/report.xml
-**/fastlane/Preview.html
-**/fastlane/screenshots
-**/fastlane/test_output
-
-# Bundle artifact
+# Bundle
 *.jsbundle
 
 # Ruby / CocoaPods
 **/Pods/
 /vendor/bundle/
 
-# Temporary files created by Metro to check the health of the file watcher
-.metro-health-check*
-
-# testing
-/coverage
+# Fastlane
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
 
 # Yarn
 .yarn/*
@@ -73,3 +56,22 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# ----- Backend (Python) -----
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.env
+backend/tourism.db
+backend/.mypy_cache/
+backend/.pytest_cache/
+
+# ----- Secrets / Keystores -----
+*.keystore
+!debug.keystore
+*.jks
+*.p12
+*.mobileprovision
+*.cer
+google-play-service-account.json

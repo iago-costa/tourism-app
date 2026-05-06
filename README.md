@@ -1,97 +1,105 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 🌎 Explore Tourism Brasil Seguro
 
-# Getting Started
+> Discover Brazil safely, conveniently, and with excitement.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+A multilingual, smart, and safe mobile app designed to help tourists from all over the world discover the best tourist attractions in Brazil with confidence, comfort, and practicality.
 
-## Step 1: Start Metro
+---
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## 📂 Project Structure
 
-To start the Metro dev server, run the following command from the root of your React Native project:
-
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+```
+tourism-app/
+├── backend/                    # FastAPI REST API
+│   ├── app/                    # Application code
+│   ├── requirements.txt        # Python dependencies
+│   ├── Dockerfile              # Container build
+│   └── README.md               # Backend docs
+├── frontend-react-native/      # React Native mobile app
+│   ├── App.tsx                  # App entrypoint
+│   ├── android/                 # Android native project
+│   ├── ios/                     # iOS native project
+│   ├── package.json             # Node dependencies
+│   └── ...
+├── docs/                        # App documentation & specs
+├── .github/workflows/           # CI/CD pipelines
+│   ├── ci.yml                   # Lint + test on every push
+│   ├── android-deploy.yml       # Deploy to Google Play Store
+│   └── ios-deploy.yml           # Deploy to Apple App Store
+└── README.md
 ```
 
-## Step 2: Build and run your app
+## 🚀 Getting Started
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+### Backend
 
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
 
-### iOS
+### Frontend (React Native)
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+```bash
+cd frontend-react-native
+npm install
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+# iOS
+npx react-native run-ios
 
-```sh
-bundle install
+# Android
+npx react-native run-android
 ```
 
-Then, and every time you update your native dependencies, run:
+## 📱 Key Features
 
-```sh
-bundle exec pod install
-```
+- 🌍 **Multilingual Interface** — Auto-translation in 7+ languages
+- 🗺️ **Interactive Maps** — Real-time routing like Google Maps
+- 📸 **Real Images** — Updated photos of tourist sites
+- 🔒 **Safety Indicators** — Public data + user reviews
+- ✨ **Smart Recommendations** — Personalized by traveler profile
+- 🧳 **Ready-made Itineraries** — 1-day, 3-day, and 1-week tours
+- 📍 **Offline Mode** — Maps and info without internet
+- 🆘 **Emergency Button** — Police, hospitals, consulates
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## 🔄 CI/CD
 
-```sh
-# Using npm
-npm run ios
+Automated pipelines via GitHub Actions:
 
-# OR using Yarn
-yarn ios
-```
+| Workflow | Trigger | Target |
+|---|---|---|
+| `ci.yml` | Push to `main` / PRs | Lint + Tests |
+| `android-deploy.yml` | Tags `v*` / Manual | Google Play Store |
+| `ios-deploy.yml` | Tags `v*` / Manual | Apple App Store |
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+See [CI/CD Setup Guide](#cicd-secrets-setup) below for required secrets.
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+### CI/CD Secrets Setup
 
-## Step 3: Modify your app
+Configure these in **GitHub → Settings → Secrets and variables → Actions**:
 
-Now that you have successfully run the app, let's make changes!
+#### Android (Google Play)
+| Secret | Description |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | Base64-encoded upload keystore (.jks) |
+| `ANDROID_KEY_ALIAS` | Keystore alias |
+| `ANDROID_KEY_PASSWORD` | Key password |
+| `ANDROID_STORE_PASSWORD` | Store password |
+| `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | Google Play Console service account JSON |
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+#### iOS (App Store)
+| Secret | Description |
+|---|---|
+| `IOS_CERTIFICATE_BASE64` | Base64-encoded .p12 signing certificate |
+| `IOS_CERTIFICATE_PASSWORD` | Certificate password |
+| `IOS_PROVISIONING_PROFILE_BASE64` | Base64-encoded provisioning profile |
+| `APPSTORE_API_KEY_ID` | App Store Connect API key ID |
+| `APPSTORE_ISSUER_ID` | App Store Connect issuer ID |
+| `APPSTORE_API_PRIVATE_KEY` | App Store Connect API private key (.p8 content) |
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## 📄 License
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+MIT

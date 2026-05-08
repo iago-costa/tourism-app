@@ -15,6 +15,7 @@ tourism-app/
 │   ├── requirements.txt        # Python dependencies
 │   ├── Dockerfile              # Container build
 │   └── README.md               # Backend docs
+├── frontend/                   # SvelteKit web frontend (tourism.vivdio.com)
 ├── frontend-react-native/      # React Native mobile app
 │   ├── App.tsx                  # App entrypoint
 │   ├── android/                 # Android native project
@@ -77,6 +78,18 @@ task --list   # Show all available tasks
 | `task status` | Show status of all services |
 | `task clean` | Remove venv, node_modules, volumes |
 
+### Web Stack Commands (SvelteKit + FastAPI)
+
+| Command | Description |
+|---|---|
+| `task install:web` | Install web frontend dependencies |
+| `task dev:web` | Run SvelteKit web frontend |
+| `task test:web` | Validate web frontend (`check` + `build`) |
+| `task lint:web` | Validate web frontend (`check` + `build`) |
+| `task web:dns` | Update Cloudflare DNS for tourism.vivdio.com |
+| `task web:deploy -- <tag>` | Deploy production stack (Swarm/Traefik) |
+| `task web:smoke` | Run post-deploy smoke tests |
+
 ## 📱 Key Features
 
 - 🌍 **Multilingual Interface** — Auto-translation in 7+ languages
@@ -97,6 +110,9 @@ Automated pipelines via GitHub Actions:
 | `ci.yml` | Push to `main` / PRs | Lint + Tests |
 | `android-deploy.yml` | Tags `v*` / Manual | Google Play Store |
 | `ios-deploy.yml` | Tags `v*` / Manual | Apple App Store |
+| `cd.yml` | Push/PR (`main`) | Web/API lint + build + deploy |
+| `db-migrate.yml` | Push/Manual | Alembic migrations |
+| `cloudflare-dns.yml` | Manual | DNS record for tourism.vivdio.com |
 
 See [CI/CD Setup Guide](#cicd-secrets-setup) below for required secrets.
 

@@ -1,43 +1,57 @@
 # Explore Tourism Brasil Seguro — Backend
 
-FastAPI-based REST API for the tourism app.
+FastAPI async backend padronizado com SQLAlchemy 2, Alembic, OAuth Google, Stripe e Resend.
 
 ## Quick Start
 
 ```bash
 cd backend
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
 
-API docs available at: http://localhost:8000/docs
+API docs: `http://localhost:8000/docs`
 
-## Project Structure
+## Core Endpoints
 
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/logout`
+- `GET /api/v1/auth/me`
+- `GET /api/v1/auth/google/start`
+- `GET /api/v1/auth/google/callback`
+- `POST /api/v1/auth/recover-account`
+- `POST /api/v1/auth/reset-password`
+- `POST /api/v1/billing/checkout`
+- `GET /api/v1/billing/me`
+- `POST /api/v1/billing/webhook`
+
+## Migrations
+
+```bash
+cd backend
+alembic upgrade head
 ```
-backend/
-├── app/
-│   ├── __init__.py
-│   ├── main.py          # FastAPI application
-│   ├── config.py         # Settings (env-driven)
-│   └── routes/
-│       ├── __init__.py
-│       ├── health.py     # Health check
-│       ├── auth.py       # Authentication
-│       ├── attractions.py # Tourist attractions
-│       └── reviews.py    # Reviews & ratings
-├── requirements.txt
-├── Dockerfile
-└── README.md
+
+## Testes
+
+```bash
+cd backend
+pytest -q
 ```
 
-## Environment Variables
+## Environment
 
-| Variable | Default | Description |
-|---|---|---|
-| `DATABASE_URL` | `sqlite:///./tourism.db` | Database connection string |
-| `SECRET_KEY` | `CHANGE-ME-in-production` | JWT signing key |
-| `ALLOWED_ORIGINS` | `["*"]` | CORS allowed origins |
-| `DEBUG` | `false` | Debug mode |
+Use `.env.example` como referência. Principais variáveis:
+
+- `DATABASE_URL`
+- `JWT_SECRET_KEY`
+- `GOOGLE_OAUTH_CLIENT_ID`
+- `GOOGLE_OAUTH_CLIENT_SECRET`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `RESEND_API_KEY`

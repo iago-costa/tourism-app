@@ -1,23 +1,183 @@
-"""Authentication routes — register, login, token refresh."""
+"""Authentication routes: password + Google OAuth + recovery."""
 
-from fastapi import APIRouter
+from datetime import datetime, timedelta, timezone
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, EmailStr
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db_session
+from app.dependencies import get_current_user
+from app.models import PasswordResetToken, RefreshToken, User
+from app.services.email import send_password_reset_email
+from app.services.google_oauth import build_google_authorize_url, fetch_google_profile
+from app.services.security import create_access_token, create_refresh_token, decode_token, hash_password, verify_password
+from app.services.tokens import generate_reset_token
+from app.services.tokens import token_digest
 
 router = APIRouter()
 
 
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: str = ""
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirmRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
 @router.post("/register")
-async def register():
+async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db_session)):
     """Register a new user account."""
-    return {"message": "Registration endpoint — TODO: implement"}
+    existing = await db.scalar(select(User).where(User.email == payload.email))
+    if existing:
+        raise HTTPException(status_code=409, detail="Email already registered")
+    user = User(
+        email=payload.email,
+        full_name=payload.full_name,
+        hashed_password=hash_password(payload.password),
+    )
+    db.add(user)
+    await db.commit()
+    return {"message": "User registered"}
 
 
 @router.post("/login")
-async def login():
+async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db_session)):
     """Authenticate and return a JWT token."""
-    return {"message": "Login endpoint — TODO: implement"}
+    user = await db.scalar(select(User).where(User.email == payload.email))
+    if not user or not verify_password(payload.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    access_token = create_access_token(subject=user.email)
+    refresh_token = create_refresh_token(subject=user.email)
+    db.add(RefreshToken(user_id=user.id, token_hash=token_digest(refresh_token)))
+    await db.commit()
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 
 @router.post("/refresh")
-async def refresh_token():
-    """Refresh an expired access token."""
-    return {"message": "Token refresh endpoint — TODO: implement"}
+async def refresh_token(payload: RefreshRequest, db: AsyncSession = Depends(get_db_session)):
+    """Issue a new access token from a refresh token."""
+    token_hash = token_digest(payload.refresh_token)
+    persisted = await db.scalar(select(RefreshToken).where(RefreshToken.token_hash == token_hash))
+    if not persisted or persisted.is_revoked:
+        raise HTTPException(status_code=401, detail="Refresh token revoked")
+    try:
+        decoded = decode_token(payload.refresh_token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail="Invalid refresh token") from exc
+    if decoded.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid token type")
+    return {"access_token": create_access_token(subject=decoded["sub"]), "token_type": "bearer"}
+
+
+@router.post("/logout")
+async def logout(payload: RefreshRequest, db: AsyncSession = Depends(get_db_session)):
+    """Revoke refresh token."""
+    token_hash = token_digest(payload.refresh_token)
+    persisted = await db.scalar(select(RefreshToken).where(RefreshToken.token_hash == token_hash))
+    if persisted:
+        persisted.is_revoked = True
+        await db.commit()
+    return {"message": "Logged out successfully"}
+
+
+@router.get("/me")
+async def me(current_user: User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "oauth_provider": current_user.oauth_provider,
+    }
+
+
+@router.get("/google/start")
+async def google_oauth_start():
+    """Return Google OAuth authorization URL."""
+    if not (build_google_authorize_url and fetch_google_profile):
+        raise HTTPException(status_code=500, detail="OAuth service error")
+    return {"provider": "google", "authorize_url": build_google_authorize_url()}
+
+
+@router.get("/google/callback")
+async def google_oauth_callback(
+    code: str | None = None,
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Google OAuth callback endpoint."""
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing OAuth code")
+    if not (build_google_authorize_url and fetch_google_profile):
+        raise HTTPException(status_code=503, detail="Google OAuth is not configured")
+
+    profile = await fetch_google_profile(code)
+    email = profile.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Could not retrieve Google user email")
+    user = await db.scalar(select(User).where(User.email == email))
+    if not user:
+        user = User(
+            email=email,
+            full_name=profile.get("name", ""),
+            hashed_password=hash_password(generate_reset_token()),
+        )
+        user.oauth_provider = "google"
+        db.add(user)
+        await db.commit()
+    token = create_access_token(subject=email)
+    return {"message": "Google login successful", "access_token": token, "token_type": "bearer"}
+
+
+@router.post("/recover-account")
+async def recover_account(payload: PasswordResetRequest, db: AsyncSession = Depends(get_db_session)):
+    """Trigger password reset email via Resend."""
+    user = await db.scalar(select(User).where(User.email == payload.email))
+    if not user:
+        return {"message": "If account exists, recovery email was sent."}
+    token = generate_reset_token()
+    reset = PasswordResetToken(
+        user_id=user.id,
+        token_hash=token_digest(token),
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+    )
+    db.add(reset)
+    await db.commit()
+    await send_password_reset_email(payload.email, token)
+    return {"message": "If account exists, recovery email was sent."}
+
+
+@router.post("/reset-password")
+async def reset_password(payload: PasswordResetConfirmRequest, db: AsyncSession = Depends(get_db_session)):
+    """Reset password with token sent by email."""
+    hashed_token = token_digest(payload.token)
+    reset = await db.scalar(select(PasswordResetToken).where(PasswordResetToken.token_hash == hashed_token))
+    if not reset:
+        raise HTTPException(status_code=400, detail="Invalid reset token")
+    if reset.expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Expired reset token")
+
+    user = await db.scalar(select(User).where(User.id == reset.user_id))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.hashed_password = hash_password(payload.new_password)
+    await db.delete(reset)
+    await db.commit()
+    return {"message": "Password updated successfully"}

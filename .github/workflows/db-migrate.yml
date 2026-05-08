@@ -1,0 +1,33 @@
+name: DB Migrate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/db-migrate.yml"
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: tourism
+          POSTGRES_USER: tourism
+          POSTGRES_PASSWORD: tourism_dev
+        ports:
+          - 5434:5432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run migration
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          sed -i "s#^sqlalchemy.url = .*#sqlalchemy.url = postgresql+asyncpg://tourism:tourism_dev@localhost:5434/tourism#" alembic.ini
+          alembic upgrade head

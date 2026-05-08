@@ -6,6 +6,7 @@ dotenv: ["backend/.env"]
 vars:
   BACKEND_DIR: ./backend
   FRONTEND_DIR: ./frontend-react-native
+  FRONTEND_WEB_DIR: ./frontend
   VENV: .venv
   PYTHON: "{{.VENV}}/bin/python"
   PIP: "{{.VENV}}/bin/pip"
@@ -47,6 +48,7 @@ tasks:
     cmds:
       - task: install:back
       - task: install:front
+      - task: install:web
       - echo "✅ All dependencies installed"
 
   install:back:
@@ -61,6 +63,12 @@ tasks:
   install:front:
     desc: Install frontend npm dependencies
     dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm install
+
+  install:web:
+    desc: Install web frontend npm dependencies
+    dir: "{{.FRONTEND_WEB_DIR}}"
     cmds:
       - npm install
 
@@ -140,6 +148,13 @@ tasks:
       - npx react-native start
     interactive: true
 
+  dev:web:
+    desc: Start SvelteKit web frontend
+    dir: "{{.FRONTEND_WEB_DIR}}"
+    cmds:
+      - npm run dev -- --host 0.0.0.0 --port 5173
+    interactive: true
+
   # ─── App (Emulator / Device) ───────────────────────────────────────────────
 
   app:android:
@@ -193,6 +208,7 @@ tasks:
     cmds:
       - task: test:back
       - task: test:front
+      - task: test:web
 
   test:back:
     desc: Run backend tests
@@ -209,6 +225,13 @@ tasks:
     cmds:
       - npm test
 
+  test:web:
+    desc: Run web frontend checks
+    dir: "{{.FRONTEND_WEB_DIR}}"
+    cmds:
+      - npm run check
+      - npm run build
+
   test:health:
     desc: Quick backend health check
     cmds:
@@ -221,6 +244,7 @@ tasks:
     cmds:
       - task: lint:back
       - task: lint:front
+      - task: lint:web
 
   lint:back:
     desc: Lint backend with ruff
@@ -233,6 +257,41 @@ tasks:
     dir: "{{.FRONTEND_DIR}}"
     cmds:
       - npm run lint
+
+  lint:web:
+    desc: Validate SvelteKit web frontend
+    dir: "{{.FRONTEND_WEB_DIR}}"
+    cmds:
+      - npm run check
+      - npm run build
+
+  # ─── Production helpers ─────────────────────────────────────────────────────
+
+  web:deploy:
+    desc: Deploy production stack (requires Docker Swarm manager)
+    cmds:
+      - chmod +x ./scripts/deploy.sh
+      - ./scripts/deploy.sh {{.CLI_ARGS | default "latest"}}
+
+  web:dns:
+    desc: Update Cloudflare DNS for tourism.vivdio.com
+    cmds:
+      - chmod +x ./scripts/cloudflare-tourism-dns.sh
+      - ./scripts/cloudflare-tourism-dns.sh
+
+  web:smoke:
+    desc: Run post-deploy smoke tests against tourism.vivdio.com
+    cmds:
+      - chmod +x ./scripts/smoke-test.sh
+      - ./scripts/smoke-test.sh {{.CLI_ARGS | default "https://tourism.vivdio.com"}}
+
+  web:rollback:
+    desc: Rollback production stack to a previous image tag
+    cmds:
+      - chmod +x ./scripts/deploy.sh
+      - ./scripts/deploy.sh {{.CLI_ARGS}}
+    requires:
+      vars: [CLI_ARGS]
 
   # ─── Utilities ─────────────────────────────────────────────────────────────
 

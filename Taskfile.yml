@@ -5,8 +5,7 @@ dotenv: ["backend/.env"]
 
 vars:
   BACKEND_DIR: ./backend
-  FRONTEND_DIR: ./frontend-react-native
-  FRONTEND_WEB_DIR: ./frontend
+  FRONTEND_DIR: ./frontend
   VENV: .venv
   PYTHON: "{{.VENV}}/bin/python"
   PIP: "{{.VENV}}/bin/pip"
@@ -17,7 +16,7 @@ tasks:
   # ─── Setup ──────────────────────────────────────────────────────────────────
 
   setup:
-    desc: Full first-time setup (services + venv + deps + metro)
+    desc: Full first-time setup (services + venv + deps + web)
     cmds:
       - task: services
       - task: setup:back
@@ -36,7 +35,7 @@ tasks:
       - test -f "{{.VENV}}/bin/uvicorn"
 
   setup:front:
-    desc: Install React Native npm dependencies
+    desc: Install web frontend npm dependencies
     dir: "{{.FRONTEND_DIR}}"
     cmds:
       - npm install
@@ -48,7 +47,6 @@ tasks:
     cmds:
       - task: install:back
       - task: install:front
-      - task: install:web
       - echo "✅ All dependencies installed"
 
   install:back:
@@ -63,12 +61,6 @@ tasks:
   install:front:
     desc: Install frontend npm dependencies
     dir: "{{.FRONTEND_DIR}}"
-    cmds:
-      - npm install
-
-  install:web:
-    desc: Install web frontend npm dependencies
-    dir: "{{.FRONTEND_WEB_DIR}}"
     cmds:
       - npm install
 
@@ -99,7 +91,7 @@ tasks:
   # ─── Development ───────────────────────────────────────────────────────────
 
   dev:
-    desc: Start all services + backend + Android emulator
+    desc: Start services + backend + web frontend
     deps: [services]
     cmds:
       - |
@@ -115,18 +107,18 @@ tasks:
         cd {{.BACKEND_DIR}} && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &
         PID_BACK=$!
 
-        # Start Metro bundler
-        cd {{.FRONTEND_DIR}} && npx react-native start &
-        PID_METRO=$!
+        # Start web frontend
+        cd {{.FRONTEND_DIR}} && npm run dev -- --host 0.0.0.0 --port 5173 &
+        PID_WEB=$!
 
-        trap "kill $PID_BACK $PID_METRO 2>/dev/null" EXIT
+        trap "kill $PID_BACK $PID_WEB 2>/dev/null" EXIT
 
         echo ""
         echo "  🚀 Backend   → http://localhost:8000"
         echo "  📖 API Docs  → http://localhost:8000/docs"
-        echo "  📱 Metro     → http://localhost:8081"
+        echo "  🌐 Web       → http://localhost:5173"
         echo ""
-        echo "  💡 Run 'task app:android' or 'task app:ios' in another terminal"
+        echo "  💡 Run 'task dev:back' or 'task dev:web' in another terminal"
         echo ""
         wait
     interactive: true
@@ -141,34 +133,11 @@ tasks:
       - "{{.UVICORN}} app.main:app --host 0.0.0.0 --port 8000 --reload"
     interactive: true
 
-  dev:metro:
-    desc: Start Metro bundler (standalone)
-    dir: "{{.FRONTEND_DIR}}"
-    cmds:
-      - npx react-native start
-    interactive: true
-
   dev:web:
     desc: Start SvelteKit web frontend
-    dir: "{{.FRONTEND_WEB_DIR}}"
+    dir: "{{.FRONTEND_DIR}}"
     cmds:
       - npm run dev -- --host 0.0.0.0 --port 5173
-    interactive: true
-
-  # ─── App (Emulator / Device) ───────────────────────────────────────────────
-
-  app:android:
-    desc: Build and launch on Android emulator/device
-    dir: "{{.FRONTEND_DIR}}"
-    cmds:
-      - npx react-native run-android
-    interactive: true
-
-  app:ios:
-    desc: Build and launch on iOS simulator (macOS only)
-    dir: "{{.FRONTEND_DIR}}"
-    cmds:
-      - npx react-native run-ios
     interactive: true
 
   # ─── Database ──────────────────────────────────────────────────────────────
@@ -208,7 +177,6 @@ tasks:
     cmds:
       - task: test:back
       - task: test:front
-      - task: test:web
 
   test:back:
     desc: Run backend tests
@@ -225,13 +193,6 @@ tasks:
     cmds:
       - npm test
 
-  test:web:
-    desc: Run web frontend checks
-    dir: "{{.FRONTEND_WEB_DIR}}"
-    cmds:
-      - npm run check
-      - npm run build
-
   test:health:
     desc: Quick backend health check
     cmds:
@@ -244,7 +205,6 @@ tasks:
     cmds:
       - task: lint:back
       - task: lint:front
-      - task: lint:web
 
   lint:back:
     desc: Lint backend with ruff
@@ -253,14 +213,8 @@ tasks:
       - "{{.VENV}}/bin/ruff check ."
 
   lint:front:
-    desc: Lint frontend with ESLint
-    dir: "{{.FRONTEND_DIR}}"
-    cmds:
-      - npm run lint
-
-  lint:web:
     desc: Validate SvelteKit web frontend
-    dir: "{{.FRONTEND_WEB_DIR}}"
+    dir: "{{.FRONTEND_DIR}}"
     cmds:
       - npm run check
       - npm run build
@@ -325,5 +279,5 @@ tasks:
         echo "━━━ Backend ━━━"
         curl -sf http://localhost:8000/health 2>/dev/null && echo " ✅ UP" || echo " ❌ DOWN"
         echo ""
-        echo "━━━ Metro Bundler ━━━"
-        curl -sf http://localhost:8081/status 2>/dev/null && echo " ✅ UP" || echo " ❌ DOWN"
+        echo "━━━ Web Frontend ━━━"
+        curl -sf http://localhost:5173 2>/dev/null && echo " ✅ UP" || echo " ❌ DOWN"

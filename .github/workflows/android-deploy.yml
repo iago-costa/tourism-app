@@ -30,6 +30,7 @@ jobs:
   build-and-deploy:
     name: Build AAB & Deploy
     runs-on: ubuntu-latest
+    if: ${{ hashFiles('frontend-react-native/android/app/build.gradle') != '' }}
     defaults:
       run:
         working-directory: ${{ env.WORKING_DIR }}

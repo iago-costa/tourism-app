@@ -29,6 +29,7 @@ jobs:
   build-and-deploy:
     name: Build IPA & Deploy
     runs-on: macos-14
+    if: ${{ hashFiles('frontend-react-native/ios/Podfile') != '' }}
     defaults:
       run:
         working-directory: ${{ env.WORKING_DIR }}

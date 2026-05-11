@@ -17,6 +17,7 @@ jobs:
   frontend:
     name: Frontend — Lint & Test
     runs-on: ubuntu-latest
+    if: ${{ hashFiles('frontend-react-native/App.tsx') != '' }}
     defaults:
       run:
         working-directory: frontend-react-native

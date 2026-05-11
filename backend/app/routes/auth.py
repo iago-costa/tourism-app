@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -117,12 +117,32 @@ async def google_oauth_start():
     return {"provider": "google", "authorize_url": build_google_authorize_url()}
 
 
-@router.get("/google/callback")
+@router.api_route("/google/callback", methods=["GET", "POST"])
 async def google_oauth_callback(
+    request: Request,
     code: str | None = None,
     db: AsyncSession = Depends(get_db_session),
 ):
     """Google OAuth callback endpoint."""
+    # Support both redirect-style (GET ?code=...) and API-driven (POST {"code": ...})
+    if request.method == "POST":
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = None
+
+        if isinstance(payload, dict):
+            code = payload.get("code") or payload.get("authorization_code") or code
+
+        # Also tolerate application/x-www-form-urlencoded bodies.
+        if not code:
+            try:
+                form = await request.form()
+                if "code" in form:
+                    code = form.get("code") or code
+            except Exception:
+                pass
+
     if not code:
         raise HTTPException(status_code=400, detail="Missing OAuth code")
     if not (build_google_authorize_url and fetch_google_profile):

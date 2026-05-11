@@ -30,4 +30,4 @@ jobs:
           cd backend
           pip install -r requirements.txt
           sed -i "s#^sqlalchemy.url = .*#sqlalchemy.url = postgresql+asyncpg://tourism:tourism_dev@localhost:5434/tourism#" alembic.ini
-          alembic upgrade head
+          PYTHONPATH=. alembic upgrade head

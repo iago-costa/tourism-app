@@ -27,6 +27,13 @@ env:
   WORKING_DIR: frontend-react-native
 
 jobs:
+  skipped-no-android-tree:
+    name: Android deploy skipped
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('frontend-react-native/android/app/build.gradle') == '' }}
+    steps:
+      - run: echo "No frontend-react-native/android — skipping Play deploy."
+
   build-and-deploy:
     name: Build AAB & Deploy
     runs-on: ubuntu-latest

@@ -26,6 +26,13 @@ env:
   IOS_PROJECT_DIR: frontend-react-native/ios
 
 jobs:
+  skipped-no-ios-tree:
+    name: iOS deploy skipped
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('frontend-react-native/ios/Podfile') == '' }}
+    steps:
+      - run: echo "No frontend-react-native/ios — skipping TestFlight/App Store deploy."
+
   build-and-deploy:
     name: Build IPA & Deploy
     runs-on: macos-14

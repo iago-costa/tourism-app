@@ -11,6 +11,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # When the RN tree is absent, every job with `if: hashFiles(...)` would be skipped and GitHub
+  # marks the workflow as failed ("no jobs were run"). This job always runs in that case.
+  mobile-skipped-notice:
+    name: Mobile — skipped (no RN app in repo)
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('frontend-react-native/App.tsx') == '' }}
+    steps:
+      - run: echo "No frontend-react-native — skipping React Native lint/test."
+
   # ─────────────────────────────────────────────
   # Frontend — React Native
   # ─────────────────────────────────────────────

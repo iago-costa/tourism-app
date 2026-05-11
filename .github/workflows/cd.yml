@@ -30,6 +30,7 @@ jobs:
         run: |
           cd frontend
           npm install
+          npx svelte-kit sync
           npm run check
           npm run build
 

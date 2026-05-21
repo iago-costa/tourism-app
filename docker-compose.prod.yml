@@ -11,7 +11,7 @@ services:
       - internal
 
   backend:
-    image: ${APP_IMAGE_BACKEND:-tourism-backend:latest}
+    image: ${APP_IMAGE_BACKEND:-ghcr.io/iago-costa/tourism-app-backend:latest}
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-tourism}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-tourism}
       FRONTEND_URL: https://tourism.vivdio.com
@@ -20,6 +20,16 @@ services:
       - internal
       - vivdio_proxy-net
     deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 10s
+      update_config:
+        order: start-first
+        failure_action: rollback
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.tourism-api.rule=Host(`tourism.vivdio.com`) && (PathPrefix(`/api`) || PathPrefix(`/health`) || PathPrefix(`/docs`) || PathPrefix(`/openapi.json`))"
@@ -28,11 +38,21 @@ services:
         - "traefik.swarm.network=vivdio_proxy-net"
 
   frontend:
-    image: ${APP_IMAGE_FRONTEND:-tourism-frontend:latest}
+    image: ${APP_IMAGE_FRONTEND:-ghcr.io/iago-costa/tourism-app-frontend:latest}
     networks:
       - internal
       - vivdio_proxy-net
     deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+      update_config:
+        order: start-first
+        failure_action: rollback
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.tourism-web.rule=Host(`tourism.vivdio.com`)"

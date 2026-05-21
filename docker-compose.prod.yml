@@ -64,7 +64,7 @@ services:
         - "traefik.enable=true"
         - "traefik.http.routers.tourism-web.rule=Host(`tourism.vivdio.com`)"
         - "traefik.http.routers.tourism-web.entrypoints=websecure"
-        - "traefik.http.services.tourism-web.loadbalancer.server.port=4173"
+        - "traefik.http.services.tourism-web.loadbalancer.server.port=3000"
         - "traefik.swarm.network=vivdio_proxy-net"
 
 volumes:

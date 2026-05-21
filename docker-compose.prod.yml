@@ -16,6 +16,13 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-tourism}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-tourism}
       FRONTEND_URL: https://tourism.vivdio.com
       GOOGLE_OAUTH_REDIRECT_URI: https://tourism.vivdio.com/auth/google/callback
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-onboarding@resend.dev}
     networks:
       - internal
       - vivdio_proxy-net

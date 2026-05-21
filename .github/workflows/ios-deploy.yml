@@ -2,7 +2,6 @@ name: iOS — Deploy to App Store
 
 on:
   push:
-    branches: [main]
     tags:
       - "v*"
   workflow_dispatch:
@@ -27,17 +26,30 @@ env:
   IOS_PROJECT_DIR: frontend-react-native/ios
 
 jobs:
-  skipped-no-ios-tree:
-    name: iOS deploy skipped
+  # ── Detection: check if iOS tree exists ──
+  detect:
+    name: Detect iOS project
     runs-on: ubuntu-latest
-    if: hashFiles('frontend-react-native/ios/Podfile') == ''
+    outputs:
+      has_ios: ${{ steps.check.outputs.has_ios }}
     steps:
-      - run: echo "No frontend-react-native/ios — skipping TestFlight/App Store deploy."
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: frontend-react-native/ios/Podfile
+          sparse-checkout-cone-mode: false
+      - id: check
+        run: |
+          if [ -f "frontend-react-native/ios/Podfile" ]; then
+            echo "has_ios=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_ios=false" >> $GITHUB_OUTPUT
+          fi
 
   build-and-deploy:
     name: Build IPA & Deploy
     runs-on: macos-14
-    if: startsWith(github.ref, 'refs/tags/v') && hashFiles('frontend-react-native/ios/Podfile') != ''
+    needs: detect
+    if: needs.detect.outputs.has_ios == 'true'
     defaults:
       run:
         working-directory: ${{ env.WORKING_DIR }}

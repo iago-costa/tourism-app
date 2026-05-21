@@ -2,7 +2,6 @@ name: Android — Deploy to Google Play
 
 on:
   push:
-    branches: [main]
     tags:
       - "v*"
   workflow_dispatch:
@@ -28,17 +27,30 @@ env:
   WORKING_DIR: frontend-react-native
 
 jobs:
-  skipped-no-android-tree:
-    name: Android deploy skipped
+  # ── Detection: check if Android tree exists ──
+  detect:
+    name: Detect Android project
     runs-on: ubuntu-latest
-    if: hashFiles('frontend-react-native/android/app/build.gradle') == ''
+    outputs:
+      has_android: ${{ steps.check.outputs.has_android }}
     steps:
-      - run: echo "No frontend-react-native/android — skipping Play deploy."
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: frontend-react-native/android/app/build.gradle
+          sparse-checkout-cone-mode: false
+      - id: check
+        run: |
+          if [ -f "frontend-react-native/android/app/build.gradle" ]; then
+            echo "has_android=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_android=false" >> $GITHUB_OUTPUT
+          fi
 
   build-and-deploy:
     name: Build AAB & Deploy
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') && hashFiles('frontend-react-native/android/app/build.gradle') != ''
+    needs: detect
+    if: needs.detect.outputs.has_android == 'true'
     defaults:
       run:
         working-directory: ${{ env.WORKING_DIR }}

@@ -83,15 +83,49 @@ task --list   # Show all available tasks
 - 📍 **Offline Mode** — Maps and info without internet
 - 🆘 **Emergency Button** — Police, hospitals, consulates
 
-## 🔄 CI/CD
+## 🔄 CI/CD & Deploy
 
-Automated pipelines via GitHub Actions:
+### DNS
+
+| Domínio | Serviço |
+|---------|---------|
+| `tourism.vivdio.com` | Frontend (SvelteKit) + Backend (FastAPI) |
+
+### Docker Swarm — Serviços
+
+| Service | Imagem GHCR | Porta | Função |
+|---------|-------------|-------|--------|
+| `tourism_frontend` | `ghcr.io/iago-costa/tourism-app-frontend` | 3000 | SvelteKit |
+| `tourism_backend` | `ghcr.io/iago-costa/tourism-app-backend` | 8000 | FastAPI |
+| `tourism_db` | `postgres:16-alpine` | 5432 | PostgreSQL |
+| `tourism_redis` | `redis:7-alpine` | 6379 | Broker / cache |
+
+Proxy: **Traefik v3** na rede `vivdio_proxy-net` com TLS automático.
+
+### Deploy manual
+
+```bash
+cd ~/workspace/tourism-app
+git fetch origin main && git reset --hard origin/main
+./scripts/deploy.sh <image-tag>
+```
+
+### Rollback
+
+```bash
+./scripts/deploy.sh <short-sha-anterior>
+```
+
+### Automated pipelines via GitHub Actions
 
 | Workflow | Trigger | Target |
 |---|---|---|
 | `cd.yml` | Push/PR (`main`) | Web/API lint + build + deploy |
+| `ci.yml` | Push/PR (`main`) | Lint + test (backend + frontend) |
 | `db-migrate.yml` | Push/Manual | Alembic migrations |
 | `cloudflare-dns.yml` | Manual | DNS record for tourism.vivdio.com |
+| `ios-deploy.yml` | Tag `v*` | Build IPA + TestFlight/App Store |
+| `android-deploy.yml` | Tag `v*` | Build AAB + Google Play |
 
 See [CI/CD Setup Guide](#cicd-secrets-setup) below for required secrets.
 

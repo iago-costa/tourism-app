@@ -15,8 +15,18 @@ from app.services.google_oauth import build_google_authorize_url, fetch_google_p
 from app.services.security import create_access_token, create_refresh_token, decode_token, hash_password, verify_password
 from app.services.tokens import generate_reset_token
 from app.services.tokens import token_digest
+from app.config import settings
 
 router = APIRouter()
+
+_PASSWORD_AUTH_DISABLED = (
+    "Login por e-mail/senha disponível apenas em ambiente de desenvolvimento. Use Google."
+)
+
+
+def _require_password_auth() -> None:
+    if not settings.allow_password_auth:
+        raise HTTPException(status_code=403, detail=_PASSWORD_AUTH_DISABLED)
 
 
 class RegisterRequest(BaseModel):
@@ -45,6 +55,7 @@ class RefreshRequest(BaseModel):
 
 @router.post("/register")
 async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db_session)):
+    _require_password_auth()
     """Register a new user account."""
     existing = await db.scalar(select(User).where(User.email == payload.email))
     if existing:
@@ -61,6 +72,7 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db_s
 
 @router.post("/login")
 async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db_session)):
+    _require_password_auth()
     """Authenticate and return a JWT token."""
     user = await db.scalar(select(User).where(User.email == payload.email))
     if not user or not verify_password(payload.password, user.hashed_password):
@@ -168,6 +180,7 @@ async def google_oauth_callback(
 
 @router.post("/recover-account")
 async def recover_account(payload: PasswordResetRequest, db: AsyncSession = Depends(get_db_session)):
+    _require_password_auth()
     """Trigger password reset email via Resend."""
     user = await db.scalar(select(User).where(User.email == payload.email))
     if not user:
@@ -186,6 +199,7 @@ async def recover_account(payload: PasswordResetRequest, db: AsyncSession = Depe
 
 @router.post("/reset-password")
 async def reset_password(payload: PasswordResetConfirmRequest, db: AsyncSession = Depends(get_db_session)):
+    _require_password_auth()
     """Reset password with token sent by email."""
     hashed_token = token_digest(payload.token)
     reset = await db.scalar(select(PasswordResetToken).where(PasswordResetToken.token_hash == hashed_token))

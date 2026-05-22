@@ -1,12 +1,29 @@
 <script lang="ts">
-  import { apiFetch } from "$lib/api";
-  import { clearTokens, readAccessToken, readRefreshToken, saveTokens } from "$lib/auth";
+  import { goto } from "$app/navigation";
+  import { saveTokens } from "$lib/auth";
+  import { isPasswordAuthEnabled } from "$lib/auth-config";
 
   let email = "";
   let password = "";
-  let token = readAccessToken();
-  let refreshToken = readRefreshToken();
   let message = "";
+  let googleLoading = false;
+
+  async function loginWithGoogle() {
+    googleLoading = true;
+    try {
+      const res = await fetch("/api/v1/auth/google/start");
+      const data = await res.json();
+      if (!res.ok || !data.authorize_url) {
+        message = data.detail || "Google OAuth não disponível";
+        googleLoading = false;
+        return;
+      }
+      window.location.href = data.authorize_url;
+    } catch {
+      message = "Falha ao iniciar login com Google";
+      googleLoading = false;
+    }
+  }
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
@@ -16,57 +33,32 @@
       body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
-    token = data.access_token || "";
-    refreshToken = data.refresh_token || "";
-    if (token && refreshToken) saveTokens(token, refreshToken);
-    message = token ? "Login realizado" : data.detail || "Falha no login";
-  }
-
-  async function refreshAccessToken() {
-    const res = await fetch("/api/v1/auth/refresh", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-    const data = await res.json();
-    token = data.access_token || token;
-    if (token && refreshToken) saveTokens(token, refreshToken);
-    message = data.access_token ? "Access token renovado" : data.detail || "Falha ao renovar token";
-  }
-
-  async function logout() {
-    const res = await fetch("/api/v1/auth/logout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-    const data = await res.json();
-    token = "";
-    refreshToken = "";
-    clearTokens();
-    message = data.message || "Logout realizado";
-  }
-
-  async function loadProfile() {
-    const res = await apiFetch("/api/v1/auth/me");
-    const data = await res.json();
-    message = data.email ? `Sessao ativa: ${data.email}` : data.detail || "Sem sessao";
-    token = readAccessToken();
+    const token = data.access_token || "";
+    const refresh = data.refresh_token || token;
+    if (token) {
+      saveTokens(token, refresh);
+      goto("/");
+      return;
+    }
+    message = data.detail || "Falha no login";
   }
 </script>
 
 <main>
   <h1>Login</h1>
-  <form on:submit={submit}>
-    <input type="email" bind:value={email} required placeholder="Email" />
-    <input type="password" bind:value={password} required placeholder="Senha" />
-    <button type="submit">Entrar</button>
-  </form>
-  <p>{message}</p>
-  {#if token}<code>{token}</code>{/if}
-  <div>
-    <button type="button" on:click={refreshAccessToken} disabled={!refreshToken}>Renovar token</button>
-    <button type="button" on:click={logout} disabled={!refreshToken}>Logout</button>
-    <button type="button" on:click={loadProfile} disabled={!token}>Ver perfil</button>
-  </div>
+
+  <button type="button" on:click={loginWithGoogle} disabled={googleLoading}>
+    {googleLoading ? "Redirecionando..." : "Entrar com Google"}
+  </button>
+
+  {#if isPasswordAuthEnabled}
+    <form on:submit={submit}>
+      <input type="email" bind:value={email} required placeholder="Email" />
+      <input type="password" bind:value={password} required placeholder="Senha" />
+      <button type="submit">Entrar com e-mail</button>
+    </form>
+    <p><a href="/cadastro">Criar conta</a></p>
+  {/if}
+
+  {#if message}<p>{message}</p>{/if}
 </main>

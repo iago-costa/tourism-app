@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { isPasswordAuthEnabled } from "$lib/auth-config";
+
   let email = "";
   let fullName = "";
   let password = "";
@@ -18,11 +20,16 @@
 
 <main>
   <h1>Criar conta</h1>
+  <p><a href="/login">Entrar com Google</a></p>
+  {#if isPasswordAuthEnabled}
   <form on:submit={submit}>
     <input bind:value={fullName} placeholder="Nome completo" />
     <input type="email" bind:value={email} required placeholder="Email" />
     <input type="password" bind:value={password} required placeholder="Senha" />
     <button type="submit">Cadastrar</button>
   </form>
+  {:else}
+  <p>Cadastro por senha disponível apenas em desenvolvimento.</p>
+  {/if}
   <p>{message}</p>
 </main>

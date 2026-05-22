@@ -11,7 +11,12 @@ class Settings(BaseSettings):
 
     app_name: str = "Tourism API"
     app_env: str = "development"
+    environment: str = "development"  # development | production
     app_debug: bool = False
+
+    @property
+    def allow_password_auth(self) -> bool:
+        return self.environment != "production"
 
     database_url: str = "postgresql+asyncpg://tourism:tourism_dev@localhost:5432/tourism_dev"
 

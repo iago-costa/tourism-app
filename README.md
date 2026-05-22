@@ -124,8 +124,7 @@ git fetch origin main && git reset --hard origin/main
 | `ci.yml` | Push/PR (`main`) | Lint + test (backend + frontend) |
 | `db-migrate.yml` | Push/Manual | Alembic migrations |
 | `cloudflare-dns.yml` | Manual | DNS record for tourism.vivdio.com |
-| `ios-deploy.yml` | Tag `v*` | Build IPA + TestFlight/App Store |
-| `android-deploy.yml` | Tag `v*` | Build AAB + Google Play |
+
 
 See [CI/CD Setup Guide](#cicd-secrets-setup) below for required secrets.
 

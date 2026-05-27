@@ -5,23 +5,33 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-tourism}
       POSTGRES_USER: ${POSTGRES_USER:-tourism}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+      POSTGRES_INITDB_ARGS: -c wal_level=replica
     volumes:
-      - tourism_pgdata:/var/lib/postgresql/data
-    networks:
-      - internal
+    - tourism_pgdata:/var/lib/postgresql/data
+    networks: &id001
+    - internal
     deploy:
       replicas: 1
       placement:
         constraints:
-          - node.role == manager
+        - node.labels.stateful == true
       restart_policy:
         condition: any
         delay: 5s
-
+    command:
+    - postgres
+    - -c
+    - wal_level=replica
+    - -c
+    - max_wal_senders=5
+    - -c
+    - hot_standby=on
+    - -c
+    - max_replication_slots=5
   backend:
     image: ${APP_IMAGE_BACKEND:-ghcr.io/iago-costa/tourism-app-backend:latest}
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-tourism}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-tourism}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-tourism}:${POSTGRES_PASSWORD:-change_me}@/${POSTGRES_DB:-tourism}?host=db&host=db-standby&port=5432&target_session_attrs=primary
       FRONTEND_URL: https://tourism.vivdio.com
       GOOGLE_OAUTH_REDIRECT_URI: https://tourism.vivdio.com/auth/google/callback
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
@@ -32,15 +42,15 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-onboarding@resend.dev}
     networks:
-      - internal
-      - vivdio_proxy-net
+    - internal
+    - vivdio_proxy-net
     deploy:
       replicas: 1
       placement:
         constraints:
-          - node.role == worker
+        - node.labels.run_apps == true
         preferences:
-          - spread: node.id
+        - spread: node.id
       restart_policy:
         condition: any
         delay: 10s
@@ -48,24 +58,24 @@ services:
         order: start-first
         failure_action: rollback
       labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.tourism-api.rule=Host(`tourism.vivdio.com`) && (PathPrefix(`/api`) || PathPrefix(`/health`) || PathPrefix(`/docs`) || PathPrefix(`/openapi.json`))"
-        - "traefik.http.routers.tourism-api.entrypoints=websecure"
-        - "traefik.http.services.tourism-api.loadbalancer.server.port=8000"
-        - "traefik.swarm.network=vivdio_proxy-net"
-
+      - traefik.enable=true
+      - traefik.http.routers.tourism-api.rule=Host(`tourism.vivdio.com`) && (PathPrefix(`/api`)
+        || PathPrefix(`/health`) || PathPrefix(`/docs`) || PathPrefix(`/openapi.json`))
+      - traefik.http.routers.tourism-api.entrypoints=websecure
+      - traefik.http.services.tourism-api.loadbalancer.server.port=8000
+      - traefik.swarm.network=vivdio_proxy-net
   frontend:
     image: ${APP_IMAGE_FRONTEND:-ghcr.io/iago-costa/tourism-app-frontend:latest}
     networks:
-      - internal
-      - vivdio_proxy-net
+    - internal
+    - vivdio_proxy-net
     deploy:
       replicas: 1
       placement:
         constraints:
-          - node.role == worker
+        - node.labels.run_apps == true
         preferences:
-          - spread: node.id
+        - spread: node.id
       restart_policy:
         condition: any
         delay: 5s
@@ -73,15 +83,36 @@ services:
         order: start-first
         failure_action: rollback
       labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.tourism-web.rule=Host(`tourism.vivdio.com`)"
-        - "traefik.http.routers.tourism-web.entrypoints=websecure"
-        - "traefik.http.services.tourism-web.loadbalancer.server.port=3000"
-        - "traefik.swarm.network=vivdio_proxy-net"
-
+      - traefik.enable=true
+      - traefik.http.routers.tourism-web.rule=Host(`tourism.vivdio.com`)
+      - traefik.http.routers.tourism-web.entrypoints=websecure
+      - traefik.http.services.tourism-web.loadbalancer.server.port=3000
+      - traefik.swarm.network=vivdio_proxy-net
+  db-standby:
+    image: postgres:16-alpine
+    environment:
+      PRIMARY_HOST: db
+      PRIMARY_PORT: '5432'
+      REPL_USER: ${REPL_USER:-replicator}
+      REPL_PASSWORD: ${REPL_PASSWORD:-replicator_secret}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+    - tourism_pgdata_standby:/var/lib/postgresql/data
+    - /home/ubuntu/workspace/cluster/docker/stateful/postgres-standby-entrypoint.sh:/usr/local/bin/standby-entrypoint.sh:ro
+    entrypoint:
+    - /usr/local/bin/standby-entrypoint.sh
+    networks: *id001
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+        - node.labels.stateful_replica == true
+      restart_policy:
+        condition: any
+        delay: 5s
 volumes:
-  tourism_pgdata:
-
+  tourism_pgdata: null
+  tourism_pgdata_standby: {}
 networks:
   internal:
     driver: overlay

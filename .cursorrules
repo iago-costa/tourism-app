@@ -1,0 +1,23 @@
+Projeto: tourism-app
+Stack: Backend FastAPI (Python 3.11+, SQLAlchemy async, Alembic, OAuth Google, billing/webhooks) + Frontend SvelteKit.
+
+Objetivo destas regras (Cursor)
+- Proteger fluxos de autenticação e cobrança (tokens, webhooks) e manter consistência de dados.
+- Seguir padrões de rotas/serviços existentes e evitar mudanças amplas.
+
+Backend (Python)
+- Tipagem e Pydantic v2: mantenha contratos claros de request/response.
+- Segurança: nunca exponha tokens, segredos, payloads de webhooks ou dados pessoais em logs/erros.
+- Billing/webhooks: valide assinaturas e trate replays; mantenha idempotência em handlers.
+- Banco: mudanças em models exigem migração Alembic e atualização de schemas/rotas afetadas.
+
+Formatação e lint
+- Há configuração Ruff em backend/pyproject.toml; use Ruff se estiver disponível no ambiente.
+- Antes de finalizar mudanças no backend, preferir:
+  - (em backend/) python -m ruff format .
+  - (em backend/) python -m ruff check .
+  - (em backend/) pytest
+
+Frontend (SvelteKit)
+- Mantenha lógica server-side em +page.server/+server quando aplicável; centralize chamadas em lib.
+- Validação mínima: em frontend/, rode npm run check quando alterar TS/Svelte.

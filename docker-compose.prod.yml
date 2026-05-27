@@ -9,6 +9,14 @@ services:
       - tourism_pgdata:/var/lib/postgresql/data
     networks:
       - internal
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
 
   backend:
     image: ${APP_IMAGE_BACKEND:-ghcr.io/iago-costa/tourism-app-backend:latest}
@@ -30,7 +38,9 @@ services:
       replicas: 1
       placement:
         constraints:
-          - node.role == manager
+          - node.role == worker
+        preferences:
+          - spread: node.id
       restart_policy:
         condition: any
         delay: 10s
@@ -53,7 +63,9 @@ services:
       replicas: 1
       placement:
         constraints:
-          - node.role == manager
+          - node.role == worker
+        preferences:
+          - spread: node.id
       restart_policy:
         condition: any
         delay: 5s

@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { isPasswordAuthEnabled } from "$lib/auth-config";
+  import type { PageData } from "./$types";
+
+  export let data: PageData;
 
   let email = "";
   let fullName = "";
@@ -21,7 +23,7 @@
 <main>
   <h1>Criar conta</h1>
   <p><a href="/login">Entrar com Google</a></p>
-  {#if isPasswordAuthEnabled}
+  {#if data.authConfig.allow_password_auth}
   <form on:submit={submit}>
     <input bind:value={fullName} placeholder="Nome completo" />
     <input type="email" bind:value={email} required placeholder="Email" />

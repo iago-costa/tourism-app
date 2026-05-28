@@ -1,0 +1,12 @@
+---
+description: SvelteKit/TypeScript — tourism-app
+globs: frontend/**,frontend/**/*
+alwaysApply: false
+---
+
+# Frontend SvelteKit (tourism-app)
+
+- Diretório: `frontend/`
+- Centralizar API em `lib/api/`
+- Agente: `.agents/agents/frontend/frontend-engineer.md`
+- npm run check em frontend/

@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "project": "tourism-app",
+  "context_path": ".agents/tourism-app/CONTEXT.md",
+  "default_agent": {
+    "role": "tech-lead",
+    "agent_path": "agents/leadership/tech-lead.md",
+    "system_prompt_path": "system-prompts/leadership/tech-lead.md"
+  },
+  "no_match": {
+    "suggest_rules": [
+      "tourism-app-core",
+      "backend-python",
+      "frontend-svelte",
+      "devops-infra"
+    ],
+    "message_pt": "Nenhuma regra especializada corresponde. Use tech-lead e tourism-app-core."
+  },
+  "rules": [
+    {
+      "id": "tourism-app-core",
+      "description": "Regras globais do projeto tourism-app",
+      "cursor_rule": ".cursor/rules/tourism-app-core.mdc",
+      "trae_rule": ".trae/rules/tourism-app-core.md",
+      "windsurf_rule": ".windsurf/rules/tourism-app-core.md",
+      "antigravity_rule": ".antigravity/rules/tourism-app-core.md",
+      "always_apply": true,
+      "priority": 100,
+      "min_score": 0,
+      "agents": [],
+      "keywords": [
+        "segurança",
+        "seguranca",
+        "auth",
+        "jwt",
+        "oauth",
+        "pii",
+        "privacidade",
+        "segredo",
+        "token",
+        "webhook",
+        "oauth",
+        "billing",
+        "webhook",
+        "stripe",
+        "google"
+      ],
+      "path_globs": []
+    },
+    {
+      "id": "backend-python",
+      "description": "FastAPI, SQLAlchemy, Alembic, pytest",
+      "cursor_rule": ".cursor/rules/backend-python.mdc",
+      "trae_rule": ".trae/rules/backend-python.md",
+      "windsurf_rule": ".windsurf/rules/backend-python.md",
+      "antigravity_rule": ".antigravity/rules/backend-python.md",
+      "always_apply": false,
+      "priority": 80,
+      "min_score": 2,
+      "agents": [
+        {
+          "role": "backend-engineer",
+          "agent_path": "agents/backend/backend-engineer.md",
+          "skill_path": "skills/backend/backend-engineer.md",
+          "system_prompt_path": "system-prompts/backend/backend-engineer.md",
+          "triggers": [
+            "api",
+            "fastapi",
+            "sqlalchemy",
+            "alembic",
+            "pytest",
+            "router",
+            "service",
+            "model",
+            "schema",
+            "migração",
+            "postgres"
+          ]
+        },
+        {
+          "role": "security-engineer",
+          "agent_path": "agents/security/security-engineer.md",
+          "skill_path": "skills/security/security-engineer.md",
+          "system_prompt_path": "system-prompts/security/security-engineer.md",
+          "triggers": [
+            "auth",
+            "jwt",
+            "oauth",
+            "senha",
+            "vulnerabilidade"
+          ]
+        }
+      ],
+      "keywords": [
+        "backend",
+        "python",
+        "fastapi",
+        "sqlalchemy",
+        "alembic",
+        "pytest",
+        "router",
+        "endpoint",
+        "migração",
+        "postgresql",
+        "pydantic"
+      ],
+      "path_globs": [
+        "backend/**",
+        "backend/**/*"
+      ]
+    },
+    {
+      "id": "frontend-svelte",
+      "description": "SvelteKit, TypeScript, Tailwind",
+      "cursor_rule": ".cursor/rules/frontend-svelte.mdc",
+      "trae_rule": ".trae/rules/frontend-svelte.md",
+      "windsurf_rule": ".windsurf/rules/frontend-svelte.md",
+      "antigravity_rule": ".antigravity/rules/frontend-svelte.md",
+      "always_apply": false,
+      "priority": 80,
+      "min_score": 2,
+      "agents": [
+        {
+          "role": "frontend-engineer",
+          "agent_path": "agents/frontend/frontend-engineer.md",
+          "skill_path": "skills/frontend/frontend-engineer.md",
+          "system_prompt_path": "system-prompts/frontend/frontend-engineer.md",
+          "triggers": [
+            "svelte",
+            "sveltekit",
+            "componente",
+            "tailwind",
+            "typescript",
+            "dashboard"
+          ]
+        },
+        {
+          "role": "ui-engineer",
+          "agent_path": "agents/frontend/ui-engineer.md",
+          "skill_path": "skills/frontend/ui-engineer.md",
+          "system_prompt_path": "system-prompts/frontend/ui-engineer.md",
+          "triggers": [
+            "ui",
+            "ux",
+            "layout",
+            "acessibilidade",
+            "a11y"
+          ]
+        }
+      ],
+      "keywords": [
+        "frontend",
+        "svelte",
+        "sveltekit",
+        "typescript",
+        "tailwind",
+        "componente",
+        "vite",
+        "rota"
+      ],
+      "path_globs": [
+        "frontend/**",
+        "frontend/**/*"
+      ]
+    },
+    {
+      "id": "devops-infra",
+      "description": "Docker, CI/CD, deploy, infra",
+      "cursor_rule": ".cursor/rules/devops-infra.mdc",
+      "trae_rule": ".trae/rules/devops-infra.md",
+      "windsurf_rule": ".windsurf/rules/devops-infra.md",
+      "antigravity_rule": ".antigravity/rules/devops-infra.md",
+      "always_apply": false,
+      "priority": 70,
+      "min_score": 2,
+      "agents": [
+        {
+          "role": "sre",
+          "agent_path": "agents/devops/sre.md",
+          "skill_path": "skills/devops/sre.md",
+          "system_prompt_path": "system-prompts/devops/sre.md",
+          "triggers": [
+            "deploy",
+            "docker",
+            "swarm",
+            "traefik",
+            "ci",
+            "github actions",
+            "infra",
+            "kubernetes"
+          ]
+        }
+      ],
+      "keywords": [
+        "deploy",
+        "docker",
+        "swarm",
+        "traefik",
+        "ci/cd",
+        "github actions",
+        "stack",
+        "infra"
+      ],
+      "path_globs": [
+        "docker-compose*.yml",
+        "docker-stack*.yml",
+        "Dockerfile*",
+        "scripts/**",
+        ".github/**",
+        "Makefile",
+        "Taskfile.yml",
+        "nginx.conf",
+        "apps/**/deploy/**"
+      ]
+    }
+  ]
+}

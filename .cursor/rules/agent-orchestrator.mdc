@@ -1,0 +1,60 @@
+---
+description: Orquestração automática .cursor/rules → agentes .agents (tourism-app)
+alwaysApply: true
+---
+
+# Orquestrador de agentes (tourism-app)
+
+Antes de implementar, **detecte e aplique** a regra e o agente corretos deste repositório.
+
+## Fluxo obrigatório
+
+1. **Identificar repositório** — em workspace multi-root, paths incluem prefixo `tourism-app/`.
+2. **Consultar** `.agents/orchestrator/registry.json`.
+3. **Detectar** (preferencial — workspace):
+   ```bash
+   python3 ../tools/agent_orchestrator/cli.py workspace-detect "MENSAGEM" --files tourism-app/path/to/file
+   ```
+   Ou dentro deste repo:
+   ```bash
+   python3 tools/agent_orchestrator/cli.py detect "MENSAGEM" --files path/relativo
+   ```
+4. **Carregar bundle**:
+   ```bash
+   python3 ../tools/agent_orchestrator/cli.py workspace-load "MENSAGEM" --files tourism-app/path
+   ```
+5. **Agir** com persona `.agents/agents/...` + regra `.cursor/rules/*.mdc` + `tourism-app-core` (sempre).
+
+## Heurística (sem CLI)
+
+| Contexto | Regra | Agente |
+|----------|-------|--------|
+| FastAPI, Alembic, pytest | `backend-python` | `backend-engineer` |
+| SvelteKit, componentes | `frontend-svelte` | `frontend-engineer` |
+| Docker, CI, deploy | `devops-infra` | `sre` |
+| TypeScript/Node (flowmind) | `backend-typescript` | `backend-engineer` |
+| NestJS (blog-vivdio) | `backend-nestjs` | `backend-engineer` |
+| Django (scraper-leiloes) | `backend-django` | `backend-engineer` |
+
+## Fallback
+
+- Sem match: `tech-lead` + `tourism-app-core`.
+- Transparência: `> Agente: backend-engineer (regra backend-python) [tourism-app]`
+
+## Manutenção
+
+Editar `registry.json` → `python3 ../tools/agent_orchestrator/cli.py sync --repo /home/ubuntu/workspace/tourism-app` ou `--all` no workspace.
+
+## Resiliência (subagents)
+
+Se subagents (Task tool) ou `detect`/`load` falharem:
+
+1. **Não bloqueie** — máximo 1 retry em Task tool; depois o agente principal continua.
+2. Use detecção segura:
+   ```bash
+   ./scripts/orchestrator.sh detect-safe "MENSAGEM" --files path --json
+   ./scripts/orchestrator.sh load-safe "MENSAGEM" --files path --json
+   ```
+3. Ou leia diretamente: `.agents/agents/...`, `.cursor/rules/*.mdc`, `.agents/tourism-app/CONTEXT.md`.
+4. Regra completa: `.cursor/rules/agent-fallback-resilience.mdc`
+5. Transparência: `> Repo: tourism-app | Modo fallback: heuristic | Agente: ... (regra)`

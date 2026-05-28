@@ -1,7 +1,9 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { saveTokens } from "$lib/auth";
-  import { isPasswordAuthEnabled } from "$lib/auth-config";
+  import type { PageData } from "./$types";
+
+  export let data: PageData;
 
   let email = "";
   let password = "";
@@ -51,7 +53,7 @@
     {googleLoading ? "Redirecionando..." : "Entrar com Google"}
   </button>
 
-  {#if isPasswordAuthEnabled}
+  {#if data.authConfig.allow_password_auth}
     <form on:submit={submit}>
       <input type="email" bind:value={email} required placeholder="Email" />
       <input type="password" bind:value={password} required placeholder="Senha" />

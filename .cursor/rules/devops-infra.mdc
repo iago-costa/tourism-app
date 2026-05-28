@@ -1,0 +1,10 @@
+---
+description: Docker, CI/CD — tourism-app
+globs: docker-compose*.yml,scripts/**/*,.github/**/*,Makefile,Dockerfile*
+alwaysApply: false
+---
+
+# DevOps / Infra (tourism-app)
+
+- Agente: `.agents/agents/devops/sre.md`
+- Não expor secrets em logs ou commits

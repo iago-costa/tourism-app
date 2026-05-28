@@ -1,0 +1,85 @@
+---
+description: Fallback resiliente quando subagents ou orquestrador falham — agente principal assume
+alwaysApply: true
+---
+
+# Resiliência de subagents (workspace)
+
+Quando subagents (Task tool) ou o CLI do orquestrador falham, o **agente principal do Cursor** deve continuar — **nunca bloquear** a tarefa do usuário.
+
+## Regras obrigatórias
+
+1. **NUNCA bloqueie** em falhas de subagent, spawn ou rate limit.
+2. **Máximo 1 retry** na Task tool; após falha repetida, **continue você mesmo**.
+3. **NÃO** tente spawnar subagents adicionais após 2 falhas consecutivas.
+4. Use detecção segura ou leia arquivos diretamente com a ferramenta **Read**.
+
+## Detecção segura (sem exit de erro)
+
+```bash
+# Workspace (paths com prefixo REPO/)
+./scripts/orchestrator.sh detect-safe "MENSAGEM" --files REPO/path/file --json
+./scripts/orchestrator.sh load-safe "MENSAGEM" --files REPO/path --json
+
+# Raiz do workspace
+python3 tools/agent_orchestrator/cli.py workspace-detect-safe "MENSAGEM" --files app-redacao/fastapi/...
+python3 tools/agent_orchestrator/cli.py workspace-load-safe "MENSAGEM" --files fluxo-ai/backend/...
+```
+
+Comandos `*-safe` **sempre retornam exit 0** com JSON contendo `mode`, `error`, `files_to_read` e (em load) `instructions`.
+
+## Heurística estática (sem CLI)
+
+Se o orquestrador também falhar, use a tabela:
+
+| Contexto | Regra | Agente | Arquivo |
+|----------|-------|--------|---------|
+| FastAPI, Alembic, pytest | `backend-python` | `backend-engineer` | `.agents/agents/backend/backend-engineer.md` |
+| SvelteKit, componentes | `frontend-svelte` | `frontend-engineer` | `.agents/agents/frontend/frontend-engineer.md` |
+| Docker, CI, deploy | `devops-infra` | `sre` | `.agents/agents/devops/sre.md` |
+| TypeScript/Node (flowmind) | `backend-typescript` | `backend-engineer` | `.agents/agents/backend/backend-engineer.md` |
+| NestJS (blog-vivdio) | `backend-nestjs` | `backend-engineer` | `.agents/agents/backend/backend-engineer.md` |
+| Django (scraper-leiloes) | `backend-django` | `backend-engineer` | `.agents/agents/backend/backend-engineer.md` |
+| RAG, embeddings, LLM | `ml-ai` | `llm-engineer` | `.agents/agents/ml-ai/llm-engineer.md` |
+| Auth, JWT, PII | `security` | `security-engineer` | `.agents/agents/security/security-engineer.md` |
+| Sem match claro | `{repo}-core` | `tech-lead` | `.agents/agents/leadership/tech-lead.md` |
+
+## Leitura direta (fallback mínimo)
+
+Leia com **Read** (nesta ordem):
+
+1. `.agents/{repo}/CONTEXT.md`
+2. `.cursor/rules/{repo}-core.mdc`
+3. `.cursor/rules/{regra-especializada}.mdc` (se aplicável)
+4. `.agents/agents/{disciplina}/{agente}.md`
+5. `AGENTS.md`
+
+## Linha de transparência
+
+Inclua no início da resposta quando estiver em fallback:
+
+```
+> Repo: app-redacao | Modo fallback: heuristic | Agente: backend-engineer (backend-python)
+```
+
+Variantes de `mode`: `orchestrator` (CLI ok), `heuristic` (tabela estática), `minimal` (load falhou).
+
+## Sinais de falha de subagent
+
+Trate como falha e **não insista** em subagents quando aparecer:
+
+- `Tool failed`
+- `failed to spawn`
+- `rate limit` / `429` / `too many requests`
+- `timeout` / `timed out`
+- `could not start` / `could not launch`
+- `resource exhausted`
+- `503 service unavailable`
+- `connection reset` / `connection refused`
+- Mensagens de erro genéricas do Task tool após 1 retry
+
+## Referências
+
+- Motor: `tools/agent_orchestrator/fallback.py`
+- Regra por repo: `REPO/.cursor/rules/agent-fallback-resilience.mdc`
+- Orquestração: `.cursor/rules/agent-orchestrator.mdc`, `workspace-orchestrator.mdc`

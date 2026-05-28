@@ -1,0 +1,34 @@
+        ---
+        description: Regras globais do projeto tourism-app
+        alwaysApply: true
+        ---
+
+        # tourism-app — regras globais
+
+        App de turismo com OAuth Google, billing e webhooks
+
+        **Stack:** FastAPI async + SvelteKit + Alembic + OAuth + billing
+
+        ## Objetivos do agente
+
+        - Manter consistência com padrões locais (camadas, imports, estilo).
+        - Mudanças mínimas e focadas; diffs pequenos e revisáveis.
+        - Validar com scripts existentes antes de finalizar.
+
+        ## Dados sensíveis
+
+        - OAuth tokens
+- webhooks billing
+- PII
+        - Não inserir segredos no repositório ou logs.
+
+        ## Validação
+
+        - Backend: pytest + ruff em backend/
+        - Frontend: npm run check em frontend/
+
+        ## Orquestração
+
+        - Detecção automática: `.cursor/rules/agent-orchestrator.mdc`
+        - Contexto: `.agents/tourism-app/CONTEXT.md`, `AGENTS.md`
+        - Workspace multi-repo: regra `workspace-orchestrator.mdc` na raiz do workspace

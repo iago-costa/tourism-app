@@ -53,6 +53,24 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
+class AuthConfigResponse(BaseModel):
+    """Public auth capabilities (no secrets)."""
+
+    allow_password_auth: bool
+    google_oauth_configured: bool
+    social_oauth_per_user: bool = False
+
+
+@router.get("/config", response_model=AuthConfigResponse)
+async def auth_config() -> AuthConfigResponse:
+    """Capabilities for login UI (password vs Google-only in production)."""
+    return AuthConfigResponse(
+        allow_password_auth=settings.allow_password_auth,
+        google_oauth_configured=bool(settings.google_oauth_client_id),
+        social_oauth_per_user=False,
+    )
+
+
 @router.post("/register")
 async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db_session)):
     _require_password_auth()

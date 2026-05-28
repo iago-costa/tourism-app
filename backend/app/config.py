@@ -16,7 +16,8 @@ class Settings(BaseSettings):
 
     @property
     def allow_password_auth(self) -> bool:
-        return self.environment != "production"
+        """E-mail/senha só em desenvolvimento; produção exige Google OAuth."""
+        return self.environment.strip().lower() != "production"
 
     database_url: str = "postgresql+asyncpg://tourism:tourism_dev@localhost:5432/tourism_dev"
 

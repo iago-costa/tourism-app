@@ -222,10 +222,15 @@ tasks:
   # ─── Production helpers ─────────────────────────────────────────────────────
 
   web:deploy:
-    desc: Deploy production stack (requires Docker Swarm manager)
+    desc: Deploy production stack (pull GHCR image — requires CI or existing tag)
     cmds:
       - chmod +x ./scripts/deploy.sh
       - ./scripts/deploy.sh {{.CLI_ARGS | default "latest"}}
+
+  deploy:prod:
+    desc: Build on manager + deploy Swarm (fallback when GitHub Actions billing blocks CI)
+    cmds:
+      - bash scripts/deploy-prod.sh {{.CLI_ARGS | default ""}}
 
   web:dns:
     desc: Update Cloudflare DNS for tourism.vivdio.com

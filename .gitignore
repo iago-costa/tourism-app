@@ -67,6 +67,11 @@ backend/tourism.db
 backend/.mypy_cache/
 backend/.pytest_cache/
 
+# ----- Root env (deploy) -----
+.env
+.env.prod
+!.env.prod.example
+
 # ----- Secrets / Keystores -----
 *.keystore
 !debug.keystore

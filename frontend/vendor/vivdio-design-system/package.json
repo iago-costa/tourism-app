@@ -1,0 +1,43 @@
+{
+  "name": "@vivdio/design-system",
+  "version": "1.0.0",
+  "description": "Design system Vivdio: tokens WCAG 2.1 AA, componentes Svelte, PWA, temas e i18n",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iago-costa/vivdio-design-system"
+  },
+  "svelte": "./src/lib/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/lib/index.ts",
+      "svelte": "./src/lib/index.ts",
+      "default": "./src/lib/index.ts"
+    },
+    "./styles.css": "./tokens/index.css",
+    "./tokens.css": "./tokens/tokens.css",
+    "./themes.css": "./tokens/themes.css",
+    "./grid.css": "./tokens/grid.css",
+    "./tailwind": {
+      "require": "./tokens/tailwind-preset.cjs",
+      "default": "./tokens/tailwind-preset.cjs"
+    }
+  },
+  "files": [
+    "src",
+    "tokens",
+    "eslint",
+    "docs"
+  ],
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  },
+  "keywords": [
+    "design-system",
+    "svelte",
+    "pwa",
+    "accessibility",
+    "wcag"
+  ]
+}

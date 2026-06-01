@@ -13,10 +13,13 @@
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.2.9",
     "@sveltejs/kit": "^2.57.0",
-    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "svelte": "^5.55.2",
     "svelte-check": "^4.4.6",
     "typescript": "^6.0.2",
-    "vite": "^8.0.7"
+    "vite": "^6.0.7"
+  },
+  "dependencies": {
+    "@vivdio/design-system": "file:./vendor/vivdio-design-system"
   }
 }

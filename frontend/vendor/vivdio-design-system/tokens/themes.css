@@ -1,0 +1,88 @@
+/**
+ * Light / dark semantic colors — set data-theme on <html>
+ */
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  --vd-color-bg: #f8fafc;
+  --vd-color-bg-elevated: #ffffff;
+  --vd-color-bg-muted: #f1f5f9;
+  --vd-color-fg: #0f172a;
+  --vd-color-fg-muted: #475569;
+  --vd-color-fg-subtle: #64748b;
+  --vd-color-border: #e2e8f0;
+  --vd-color-border-strong: #cbd5e1;
+
+  --vd-color-primary: #2563eb;
+  --vd-color-primary-hover: #1d4ed8;
+  --vd-color-on-primary: #ffffff;
+
+  --vd-color-success: #059669;
+  --vd-color-on-success: #ffffff;
+  --vd-color-warning: #d97706;
+  --vd-color-on-warning: #ffffff;
+  --vd-color-danger: #dc2626;
+  --vd-color-on-danger: #ffffff;
+  --vd-color-info: #0284c7;
+  --vd-color-on-info: #ffffff;
+
+  --vd-color-focus-ring: rgb(37 99 235 / 0.45);
+  --vd-color-overlay: rgb(15 23 42 / 0.5);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --vd-color-bg: #030712;
+  --vd-color-bg-elevated: #111827;
+  --vd-color-bg-muted: #1f2937;
+  --vd-color-fg: #f3f4f6;
+  --vd-color-fg-muted: #9ca3af;
+  --vd-color-fg-subtle: #6b7280;
+  --vd-color-border: #374151;
+  --vd-color-border-strong: #4b5563;
+
+  --vd-color-primary: #3b82f6;
+  --vd-color-primary-hover: #60a5fa;
+  --vd-color-on-primary: #ffffff;
+
+  --vd-color-success: #10b981;
+  --vd-color-on-success: #022c22;
+  --vd-color-warning: #fbbf24;
+  --vd-color-on-warning: #422006;
+  --vd-color-danger: #f87171;
+  --vd-color-on-danger: #450a0a;
+  --vd-color-info: #38bdf8;
+  --vd-color-on-info: #0c4a6e;
+
+  --vd-color-focus-ring: rgb(96 165 250 / 0.5);
+  --vd-color-overlay: rgb(0 0 0 / 0.65);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --vd-color-bg: #030712;
+    --vd-color-bg-elevated: #111827;
+    --vd-color-bg-muted: #1f2937;
+    --vd-color-fg: #f3f4f6;
+    --vd-color-fg-muted: #9ca3af;
+    --vd-color-fg-subtle: #6b7280;
+    --vd-color-border: #374151;
+    --vd-color-border-strong: #4b5563;
+    --vd-color-primary: #3b82f6;
+    --vd-color-primary-hover: #60a5fa;
+    --vd-color-on-primary: #ffffff;
+    --vd-color-success: #10b981;
+    --vd-color-on-success: #022c22;
+    --vd-color-warning: #fbbf24;
+    --vd-color-on-warning: #422006;
+    --vd-color-danger: #f87171;
+    --vd-color-on-danger: #450a0a;
+    --vd-color-info: #38bdf8;
+    --vd-color-on-info: #0c4a6e;
+    --vd-color-focus-ring: rgb(96 165 250 / 0.5);
+    --vd-color-overlay: rgb(0 0 0 / 0.65);
+  }
+}

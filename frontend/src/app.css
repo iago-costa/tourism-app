@@ -1,0 +1,57 @@
+@import '@vivdio/design-system/styles.css';
+
+:root,
+[data-theme='light'] {
+  --vd-color-primary: #0ea5e9;
+  --vd-color-primary-hover: #0284c7;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  html {
+    font-family: var(--vd-font-sans);
+  }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--vd-color-bg);
+    color: var(--vd-color-fg);
+    line-height: var(--vd-leading-normal);
+  }
+  a {
+    color: var(--vd-color-primary);
+  }
+}
+
+.vd-page {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: var(--vd-space-8) var(--vd-space-4);
+}
+
+.vd-page h1 {
+  font-size: var(--vd-text-2xl);
+  margin: 0 0 var(--vd-space-6);
+}
+
+.vd-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vd-space-2);
+  margin-bottom: var(--vd-space-4);
+}
+
+.vd-field label {
+  font-size: var(--vd-text-sm);
+  font-weight: var(--vd-font-medium);
+}
+
+.vd-msg {
+  font-size: var(--vd-text-sm);
+  color: var(--vd-color-danger);
+  min-height: 1.25rem;
+}

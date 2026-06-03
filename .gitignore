@@ -84,3 +84,4 @@ backend/.pytest_cache/
 *.mobileprovision
 *.cer
 google-play-service-account.json
+frontend/build/

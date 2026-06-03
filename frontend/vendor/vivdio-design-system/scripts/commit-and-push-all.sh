@@ -1,84 +1,77 @@
 #!/usr/bin/env bash
 set -euo pipefail
 WS="${VIVDIO_WORKSPACE:-/home/ubuntu/workspace}"
-
-commit_repo() {
-  local repo="$1"
-  shift
-  local wd="${WS}/${repo}"
-  [[ -d "${wd}/.git" ]] || return 0
-  cd "$wd"
-  if [[ -z "$(git status -s 2>/dev/null)" ]]; then
-    echo "clean $repo"
-    return 0
-  fi
-  git add "$@"
-  if git diff --cached --quiet; then
-    echo "nothing staged $repo"
-    return 0
-  fi
-  git commit -m "$(cat <<'EOF'
+MSG="$(cat <<'EOF'
 feat(ui): integrar @vivdio/design-system (vendor + tokens + PWA)
 
 Pacote vendored em vendor/vivdio-design-system para builds Docker.
 ThemeProvider, tokens WCAG, temas claro/escuro e docs/DESIGN_SYSTEM.md.
 EOF
 )"
+
+commit_if_staged() {
+  local repo="$1"
+  cd "${WS}/${repo}"
+  if git diff --cached --quiet; then
+    echo "skip (empty) $repo"
+    return 0
+  fi
+  git commit -m "$MSG"
   git push origin HEAD
-  echo "pushed $repo"
+  echo "ok $repo"
 }
 
-# app-redacao: apenas frontend DS (sem alterações backend pendentes)
-commit_repo app-redacao \
-  sveltekitapp/package.json sveltekitapp/package-lock.json \
-  sveltekitapp/vendor sveltekitapp/src/app.css sveltekitapp/src/routes/+layout.svelte \
-  sveltekitapp/src/routes/login sveltekitapp/vite.config.ts \
-  sveltekitapp/Dockerfile docs/DESIGN_SYSTEM.md 2>/dev/null || \
-commit_repo app-redacao \
-  sveltekitapp/package.json sveltekitapp/package-lock.json \
-  sveltekitapp/vendor sveltekitapp/src/app.css sveltekitapp/src/routes/+layout.svelte \
-  sveltekitapp/vite.config.ts docs/DESIGN_SYSTEM.md
-
-for repo in fluxo-ai vitrine-virtual universal-study flowmind scraper-leiloes scraper-content scraper-editais tourism-app clarear blog-vivdio site-pessoal; do
-  case $repo in
-    fluxo-ai|vitrine-virtual|universal-study|scraper-leiloes|scraper-content|tourism-app|clarear)
-      sub=frontend
-      [[ $repo == scraper-editais ]] && sub=web
-      commit_repo "$repo" \
-        "${sub}/package.json" "${sub}/package-lock.json" \
-        "${sub}/vendor" "${sub}/src" "${sub}/Dockerfile" \
-        docs/DESIGN_SYSTEM.md \
-        2>/dev/null || commit_repo "$repo" docs/DESIGN_SYSTEM.md "${sub}/vendor" "${sub}/package.json"
-      ;;
-    flowmind)
-      commit_repo flowmind \
-        packages/web/package.json packages/web/package-lock.json \
-        packages/web/vendor packages/web/src \
-        packages/web/vite.config.ts packages/web/Dockerfile \
-        package-lock.json docs/DESIGN_SYSTEM.md
-      ;;
-    scraper-editais)
-      commit_repo scraper-editais \
-        web/package.json web/package-lock.json web/vendor web/src web/Dockerfile docs/DESIGN_SYSTEM.md
-      ;;
-    blog-vivdio)
-      commit_repo blog-vivdio \
-        vendor apps/admin/package.json apps/web/package.json \
-        apps/admin/tailwind.config.js apps/web/src/styles/global.css \
-        docs/DESIGN_SYSTEM.md
-      ;;
-    site-pessoal)
-      commit_repo site-pessoal \
-        vendor style.css script.js docs/DESIGN_SYSTEM.md
-      ;;
-  esac
+# --- SvelteKit apps (frontend | web | sveltekitapp) ---
+for spec in \
+  "fluxo-ai:frontend" \
+  "vitrine-virtual:frontend" \
+  "universal-study:frontend" \
+  "tourism-app:frontend" \
+  "clarear:frontend" \
+  "scraper-leiloes:frontend" \
+  "scraper-content:frontend" \
+  "scraper-editais:web" \
+  "app-redacao:sveltekitapp"; do
+  repo="${spec%%:*}"
+  sub="${spec#*:}"
+  cd "${WS}/${repo}"
+  git add \
+    "${sub}/package.json" "${sub}/package-lock.json" \
+    "${sub}/vendor" "${sub}/Dockerfile" \
+    "${sub}/src" "${sub}/tailwind.config.js" "${sub}/tailwind.config.cjs" \
+    "${sub}/vite.config.ts" "${sub}/svelte.config.js" \
+    "${sub}/tsconfig.json" "${sub}/.npmrc" \
+    docs/DESIGN_SYSTEM.md 2>/dev/null || true
+  commit_if_staged "$repo"
 done
 
-# workspace registry
-if [[ -d "${WS}/.git" ]]; then
-  cd "${WS}"
-  git add .agents/orchestrator/workspace_registry.json 2>/dev/null || true
-  git diff --cached --quiet || git commit -m "chore: registrar vivdio-design-system no workspace registry" && git push origin HEAD || true
+# flowmind monorepo
+cd "${WS}/flowmind"
+git add packages/web/package.json packages/web/package-lock.json \
+  packages/web/vendor packages/web/src packages/web/Dockerfile \
+  packages/web/vite.config.ts package-lock.json docs/DESIGN_SYSTEM.md 2>/dev/null || true
+commit_if_staged flowmind
+
+# blog-vivdio
+cd "${WS}/blog-vivdio"
+git add vendor apps/admin/package.json apps/web/package.json \
+  apps/admin/tailwind.config.js apps/web/src/styles/global.css \
+  docs/DESIGN_SYSTEM.md 2>/dev/null || true
+commit_if_staged blog-vivdio
+
+# site-pessoal
+cd "${WS}/site-pessoal"
+git add vendor style.css script.js docs/DESIGN_SYSTEM.md 2>/dev/null || true
+commit_if_staged site-pessoal
+
+# pacote central
+cd "${WS}/vivdio-design-system"
+if [[ -d .git ]]; then
+  git add -A
+  git diff --cached --quiet || {
+    git commit -m "feat: design system Vivdio v1 (tokens, Svelte 5, PWA, scripts vendor)"
+    git push -u origin HEAD 2>/dev/null || echo "vivdio-design-system: push manual (sem remote)"
+  }
 fi
 
-echo "all commits done"
+echo "commits finished"

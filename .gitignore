@@ -12,6 +12,10 @@ Thumbs.db
 *.swp
 *.swo
 
+# ----- Frontend (SvelteKit) -----
+frontend/node_modules/
+frontend/.svelte-kit/
+
 # ----- Frontend (React Native) -----
 frontend-react-native/node_modules/
 frontend-react-native/npm-debug.log

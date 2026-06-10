@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "project": "vivdio-design-system",
+  "context_path": ".agents/vivdio-design-system/CONTEXT.md",
+  "default_agent": {
+    "role": "frontend-engineer",
+    "agent_path": "agents/frontend/frontend-engineer.md",
+    "system_prompt_path": "system-prompts/frontend/frontend-engineer.md"
+  },
+  "no_match": {
+    "suggest_rules": ["frontend-svelte"],
+    "message_pt": "Design system — use frontend-engineer."
+  },
+  "rules": [
+    {
+      "id": "frontend-svelte",
+      "description": "Componentes Svelte, tokens, PWA plugin",
+      "cursor_rule": ".cursor/rules/frontend-svelte.mdc",
+      "always_apply": true,
+      "priority": 100,
+      "min_score": 0,
+      "agents": [{"role": "frontend-engineer", "agent_path": "agents/frontend/frontend-engineer.md"}],
+      "keywords": ["design-system", "tokens", "pwa", "svelte", "componente", "tailwind"]
+    }
+  ]
+}

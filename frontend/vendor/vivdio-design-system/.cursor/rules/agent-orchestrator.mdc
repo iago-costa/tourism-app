@@ -1,0 +1,12 @@
+---
+description: Orquestrador vivdio-design-system
+alwaysApply: true
+---
+
+# Orquestrador (vivdio-design-system)
+
+```bash
+python3 ../tools/agent_orchestrator/cli.py workspace-detect "MENSAGEM" --files vivdio-design-system/path
+```
+
+Agente padrão: `frontend-engineer`. Regra: `vivdio-design-system-core`.

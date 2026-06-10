@@ -23,10 +23,10 @@ module.exports = {
         }
       },
       borderRadius: {
-        vd-sm: 'var(--vd-radius-sm)',
-        vd-md: 'var(--vd-radius-md)',
-        vd-lg: 'var(--vd-radius-lg)',
-        vd-xl: 'var(--vd-radius-xl)',
+        'vd-sm': 'var(--vd-radius-sm)',
+        'vd-md': 'var(--vd-radius-md)',
+        'vd-lg': 'var(--vd-radius-lg)',
+        'vd-xl': 'var(--vd-radius-xl)',
         'vd-2xl': 'var(--vd-radius-2xl)'
       },
       boxShadow: {

@@ -1,0 +1,8 @@
+---
+description: Fallback subagents vivdio-design-system
+alwaysApply: true
+---
+
+# Resiliência
+
+Se CLI/subagents falharem, continue com `frontend-engineer` + `vivdio-design-system-core`.

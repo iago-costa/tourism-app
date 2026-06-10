@@ -6,9 +6,10 @@
 
 **Depois:**
 
-1. Dependência `file:../../vivdio-design-system`
-2. `@import '@vivdio/design-system/styles.css'` no topo de `app.css`
-3. `presets: [require('@vivdio/design-system/tailwind')]` em `tailwind.config.js`
+1. Dependência `file:./vendor/vivdio-design-system` (vendor copiado por `scripts/vendor-into-repos.sh` — obrigatório para Docker)
+2. `@import '@vivdio/design-system/styles.css'` no topo de `app.css` (ou tokens/themes/grid + `components.css` após `@tailwind`)
+3. **Preset Tailwind opcional** — em apps com `@apply .btn` (cadeia de componentes locais), o preset pode quebrar o build PostCSS; use só tokens CSS (ex.: fluxo-ai)
+4. `presets: [require('@vivdio/design-system/tailwind')]` apenas se não houver `@apply` de classes custom em `@layer components`
 4. Envolver `+layout.svelte` com `<ThemeProvider>`
 5. Substituir gradualmente markup por `<Button>`, `<Input>`, etc.
 

@@ -22,6 +22,10 @@
     "./tailwind": {
       "require": "./tokens/tailwind-preset.cjs",
       "default": "./tokens/tailwind-preset.cjs"
+    },
+    "./vite/pwa": {
+      "import": "./vite/pwa.mjs",
+      "default": "./vite/pwa.mjs"
     }
   },
   "files": [

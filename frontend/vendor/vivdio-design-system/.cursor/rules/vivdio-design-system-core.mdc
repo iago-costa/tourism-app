@@ -1,0 +1,12 @@
+# vivdio-design-system — regras globais
+
+Design system compartilhado: tokens WCAG, componentes Svelte, PWA plugin.
+
+## Objetivos
+
+- Mudanças backward-compatible para consumidores vendor.
+- Validar com `npm run check` antes de vendor-into-repos.
+
+## Orquestração
+
+Detecção: `.cursor/rules/agent-orchestrator.mdc`

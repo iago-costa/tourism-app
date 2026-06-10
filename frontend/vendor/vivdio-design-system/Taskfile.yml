@@ -1,0 +1,17 @@
+version: "3"
+
+tasks:
+  check:
+    desc: Validate tokens and run vitest
+    cmds:
+      - npm run check
+
+  test:
+    desc: Run vitest
+    cmds:
+      - npm test
+
+  patch-pwa:
+    desc: Patch all SvelteKit vite configs to use vivdioPwa
+    cmds:
+      - node scripts/patch-vite-pwa.mjs

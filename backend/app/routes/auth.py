@@ -16,11 +16,13 @@ from app.services.security import create_access_token, create_refresh_token, dec
 from app.services.tokens import generate_reset_token
 from app.services.tokens import token_digest
 from app.config import settings
+from app.middleware.production_guards import build_auth_config_response
+from app.middleware.security_headers import is_production_env
 
 router = APIRouter()
 
 _PASSWORD_AUTH_DISABLED = (
-    "Login por e-mail/senha disponível apenas em ambiente de desenvolvimento. Use Google."
+    "Autenticação não disponível."
 )
 
 
@@ -61,10 +63,11 @@ class AuthConfigResponse(BaseModel):
     social_oauth_per_user: bool = False
 
 
-@router.get("/config", response_model=AuthConfigResponse)
-async def auth_config() -> AuthConfigResponse:
+@router.get("/config")
+async def auth_config():
     """Capabilities for login UI (password vs Google-only in production)."""
-    return AuthConfigResponse(
+    return build_auth_config_response(
+        is_production=is_production_env(settings.environment),
         allow_password_auth=settings.allow_password_auth,
         google_oauth_configured=bool(settings.google_oauth_client_id),
         social_oauth_per_user=False,
@@ -176,7 +179,7 @@ async def google_oauth_callback(
     if not code:
         raise HTTPException(status_code=400, detail="Missing OAuth code")
     if not (build_google_authorize_url and fetch_google_profile):
-        raise HTTPException(status_code=503, detail="Google OAuth is not configured")
+        raise HTTPException(status_code=503, detail="Serviço de autenticação indisponível.")
 
     profile = await fetch_google_profile(code)
     email = profile.get("email")

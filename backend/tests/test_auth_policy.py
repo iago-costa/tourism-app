@@ -41,7 +41,7 @@ async def test_auth_config_production():
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         r = await client.get("/api/v1/auth/config")
     assert r.status_code == 200
-    assert r.json()["allow_password_auth"] is False
+    assert r.json() == {"allow_password_auth": False}
 
 
 @pytest.mark.asyncio
@@ -54,7 +54,7 @@ async def test_login_password_blocked_in_production():
             json={"email": "dev@example.com", "password": "secret123"},
         )
     assert r.status_code == 403
-    assert "desenvolvimento" in r.json()["detail"].lower() or "Google" in r.json()["detail"]
+    assert r.json()["detail"] == "Autenticação não disponível."
 
 
 @pytest.mark.asyncio

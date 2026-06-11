@@ -17,7 +17,7 @@
       const res = await fetch('/api/v1/auth/google/start');
       const payload = await res.json();
       if (!res.ok || !payload.authorize_url) {
-        message = payload.detail || 'Google OAuth não disponível';
+        message = payload.detail || 'Não foi possível iniciar o login.';
         googleLoading = false;
         return;
       }

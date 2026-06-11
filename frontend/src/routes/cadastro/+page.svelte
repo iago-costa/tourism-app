@@ -30,8 +30,6 @@
     <input type="password" bind:value={password} required placeholder="Senha" />
     <button type="submit">Cadastrar</button>
   </form>
-  {:else}
-  <p>Cadastro por senha disponível apenas em desenvolvimento.</p>
   {/if}
   <p>{message}</p>
 </main>

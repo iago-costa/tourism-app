@@ -32,7 +32,13 @@ services:
     image: ${APP_IMAGE_BACKEND:-ghcr.io/iago-costa/tourism-app-backend:latest}
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-tourism}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-tourism}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?set JWT_SECRET_KEY in deploy env}
+      ENVIRONMENT: production
       FRONTEND_URL: https://tourism.vivdio.com
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_OAUTH_REDIRECT_URI: https://tourism.vivdio.com/auth/google/callback
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}

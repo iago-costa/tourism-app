@@ -11,5 +11,7 @@
     <li><a href="/assinatura">Assinaturas (Stripe)</a></li>
     <li><a href="/recuperar-conta">Recuperar conta</a></li>
     <li><a href="/redefinir-senha">Redefinir senha</a></li>
+    <li><a href="/privacidade">Privacidade</a></li>
+    <li><a href="/termos">Termos de uso</a></li>
   </ul>
 </main>
